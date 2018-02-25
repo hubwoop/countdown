@@ -99,26 +99,34 @@ body {
     --erlangen-bottom-color: black;
 }
 
+.foreground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+}
+
 .container {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 30vh 30vh 30vh;
     align-items: center;
     justify-items: center;
+    user-select: none;
 }
 
-.lowerhalf {
+#lowerhalf {
     background: linear-gradient(to top, var(--melbourne-bottom-color), var(--melbourne-top-color));
     height: 50vh;
 }
 
-.upperhalf {
+#upperhalf {
     background: linear-gradient(to top, var(--erlangen-bottom-color), var(--erlangen-top-color));
     height: 50vh;
     position: relative;
 }
 
-.upperhalf::before {
+#upperhalf::before {
     content: "";
     position: absolute;
     left: 0;
@@ -130,7 +138,7 @@ body {
     background-image: radial-gradient(circle at 10px -5px, transparent 12px, var(--melbourne-top-color) 13px);
 }
 
-.upperhalf::after {
+#upperhalf::after {
     content: "";
     position: absolute;
     left: 0;

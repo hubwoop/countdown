@@ -5,7 +5,7 @@
 
 /* Object definitions */
 
-function Location(city, latitude, longitude, timezoneOffset) {
+function Location(city, latitude, longitude) {
     this.sunset = 0;
     this.sunrise = 0;
     this.twilightBegin = 0;
@@ -13,7 +13,6 @@ function Location(city, latitude, longitude, timezoneOffset) {
     this.city = city;
     this.latitude = latitude;
     this.longitude = longitude;
-    this.timezoneOffset = timezoneOffset;
 }
 
 function Gradient(top, bottom) {
@@ -21,19 +20,35 @@ function Gradient(top, bottom) {
     this.bottom = bottom;
 }
 
+function Halves(upper, lower) {
+    this.upper = upper;
+    this.lower = lower;
+}
+
+function Half(location, id, hasParticles) {
+    this.location = location;
+    this.id = id;
+    this.hasParticles = hasParticles;
+    this.element = document.getElementById(id);
+}
+
 
 /* Globals */
 
 const countdownDate = new Date(Date.UTC(2018, 7, 2, 19, 35)).getTime();
 
-let melbourne = new Location("melbourne", -37.814, 144.96332, 11);
-let erlangen = new Location("erlangen", 49.59099, 11.00783, 1);
+let melbourne = new Location("melbourne", -37.814, 144.96332);
+let erlangen = new Location("erlangen", 49.59099, 11.00783);
+let halves = new Halves(
+    new Half(erlangen, 'upperhalf', false),
+    new Half(melbourne, 'lowerhalf', false)
+);
 
 const daytimeGradients = {
     dawn: new Gradient('#63adf7', '#ffb539'),
     dusk: new Gradient('#485661', '#ff822b'),
-    night: new Gradient('#7fffd4', '#4972a1'),
-    day: new Gradient('#feffaa', '#f7f246')
+    night: new Gradient('#0a1722', '#415a84'),
+    day: new Gradient('#86d4f7', '#55a7ff')
 };
 
 function updateCountdown(date) {
@@ -55,13 +70,6 @@ function updateCountdown(date) {
 }
 
 function updateLocalTimes(date) {
-    let hourErlangen = (date.getUTCHours() + 1) % 24;
-    let hourMelbourne = (date.getUTCHours() + 11) % 24;
-    let minute = forceTwoDigits(date.getMinutes());
-    let second = forceTwoDigits(date.getSeconds());
-    document.getElementById("erlangen").innerHTML = hourErlangen + ":" + minute + ":" + second;
-    document.getElementById("melbourne").innerHTML = hourMelbourne  + ":" + minute + ":" + second;
-
 
     function setCityGradient(city, gradient) {
         document.body.style.setProperty(`--${city}-top-color`, gradient.top);
@@ -70,18 +78,39 @@ function updateLocalTimes(date) {
 
     function decideOnGradient(location) {
         // console.log(`${date} >= ${location.sunrise} && ${date} <= ${location.sunset}`);
-        if(date >= location.twilightBegin && date <= location.twilightEnd) {
-            if(date <= location.sunrise) {
-                setCityGradient(location.city, daytimeGradients.dawn);
+        let gradient;
+        if (date >= location.twilightBegin && date <= location.twilightEnd) {
+
+            if (date <= location.sunrise) {
+                gradient = daytimeGradients.dawn;
             } else if (date <= location.sunset) {
-                setCityGradient(location.city, daytimeGradients.day);
+                gradient = daytimeGradients.day;
             } else {
-                setCityGradient(location.city, daytimeGradients.dusk);
+                gradient = daytimeGradients.dusk;
             }
         } else {
-            setCityGradient(location.city, daytimeGradients.night);
+            gradient = daytimeGradients.night;
         }
+        setCityGradient(location.city, gradient);
+
+        let half = (location === halves.upper.location) ? halves.upper: halves.lower;
+        if(gradient === daytimeGradients.night && !half.hasParticles) {
+            particlesJS.load(half.id, 'js/assets/particles.json');
+            half.hasParticles = true;
+        }
+        if (gradient !== daytimeGradients.night && half.hasParticles) {
+            half.element.removeChild(half.element.firstChild);
+            half.hasParticles = false;
+        }
+
     }
+
+    let hourErlangen = (date.getUTCHours() + 1) % 24;
+    let hourMelbourne = (date.getUTCHours() + 11) % 24;
+    let minute = forceTwoDigits(date.getMinutes());
+    let second = forceTwoDigits(date.getSeconds());
+    document.getElementById("erlangen").innerHTML = hourErlangen + ":" + minute + ":" + second;
+    document.getElementById("melbourne").innerHTML = hourMelbourne + ":" + minute + ":" + second;
 
     decideOnGradient(erlangen);
     decideOnGradient(melbourne);
@@ -117,7 +146,6 @@ function getSunTimes(location) {
                 location.sunset = new Date(data.results.sunset);
                 location.twilightBegin = new Date(data.results.civil_twilight_begin);
                 location.twilightEnd = new Date(data.results.civil_twilight_end);
-                console.log(location);
             });
         })
         .catch(function (err) {
@@ -129,3 +157,5 @@ window.onload = function () {
     getSunTimes(melbourne);
     getSunTimes(erlangen);
 };
+
+
