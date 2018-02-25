@@ -115,6 +115,14 @@ body {
     user-select: none;
 }
 
+#countdownWrapper {
+    z-index: 999;
+}
+
+#countdown {
+    font-size: 9vw;
+}
+
 #lowerhalf {
     background: linear-gradient(to top, var(--melbourne-bottom-color), var(--melbourne-top-color));
     height: 50vh;
