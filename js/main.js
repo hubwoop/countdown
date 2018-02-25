@@ -5,7 +5,7 @@
 
 /* Object definitions */
 
-function Location(city, latitude, longitude) {
+function Location(city, latitude, longitude, timeZoneOffset) {
     this.sunset = 0;
     this.sunrise = 0;
     this.twilightBegin = 0;
@@ -13,6 +13,7 @@ function Location(city, latitude, longitude) {
     this.city = city;
     this.latitude = latitude;
     this.longitude = longitude;
+    this.timeZoneOffset = timeZoneOffset;
 }
 
 function Gradient(top, bottom) {
@@ -37,8 +38,8 @@ function Half(location, id, hasParticles) {
 
 const countdownDate = new Date(Date.UTC(2018, 7, 2, 19, 35)).getTime();
 
-let melbourne = new Location("melbourne", -37.814, 144.96332);
-let erlangen = new Location("erlangen", 49.59099, 11.00783);
+let melbourne = new Location("melbourne", -37.814, 144.96332, 11);
+let erlangen = new Location("erlangen", 49.59099, 11.00783, 1);
 let halves = new Halves(
     new Half(erlangen, 'upperhalf', false),
     new Half(melbourne, 'lowerhalf', false)
@@ -70,6 +71,13 @@ function updateCountdown(date) {
 }
 
 function updateLocalTimes(date) {
+
+    let hourErlangen = (date.getUTCHours() + 1) % 24;
+    let hourMelbourne = (date.getUTCHours() + 11) % 24;
+    let minute = forceTwoDigits(date.getMinutes());
+    let second = forceTwoDigits(date.getSeconds());
+    document.getElementById("erlangen").innerHTML = hourErlangen + ":" + minute + ":" + second;
+    document.getElementById("melbourne").innerHTML = hourMelbourne + ":" + minute + ":" + second;
 
     function setCityGradient(city, gradient) {
         document.body.style.setProperty(`--${city}-top-color`, gradient.top);
@@ -105,13 +113,6 @@ function updateLocalTimes(date) {
 
     }
 
-    let hourErlangen = (date.getUTCHours() + 1) % 24;
-    let hourMelbourne = (date.getUTCHours() + 11) % 24;
-    let minute = forceTwoDigits(date.getMinutes());
-    let second = forceTwoDigits(date.getSeconds());
-    document.getElementById("erlangen").innerHTML = hourErlangen + ":" + minute + ":" + second;
-    document.getElementById("melbourne").innerHTML = hourMelbourne + ":" + minute + ":" + second;
-
     decideOnGradient(erlangen);
     decideOnGradient(melbourne);
 
@@ -133,8 +134,15 @@ function forceTwoDigits(i) {
 function getSunTimes(location) {
     // Melbourne https://api.sunrise-sunset.org/json?lat=-37.814&lng=-144.96332
     // Erlangen https://api.sunrise-sunset.org/json?lat=49.59099&lng=11.00783
+    let fetchDate = new Date();
+    if((fetchDate.getUTCHours() + location.timeZoneOffset) >= 24) {
+        fetchDate = 'tomorrow';
+    }
+    else {
+        fetchDate = 'today';
+    }
 
-    fetch(`https://api.sunrise-sunset.org/json?lat=${location.latitude}&lng=${location.longitude}&formatted=0`)
+    fetch(`https://api.sunrise-sunset.org/json?lat=${location.latitude}&lng=${location.longitude}&formatted=0&date=${fetchDate}`)
         .then(function (response) {
             if (response.status !== 200) {
                 console.log('Looks like there was a problem. Status Code: ' + response.status);
