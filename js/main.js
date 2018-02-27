@@ -27,10 +27,11 @@ function Halves(upper, lower) {
     this.lower = lower;
 }
 
-function Half(location, id, hasParticles) {
+function Half(location, id) {
     this.location = location;
     this.id = id;
-    this.hasParticles = hasParticles;
+    this.hasParticles = false;
+    this.hasSun = false;
     this.element = document.getElementById(id);
 }
 
@@ -46,8 +47,8 @@ const daytimeGradients = {
     day: new Gradient('#86d4f7', '#55a7ff')
 };
 
-let melbourne = new Location("melbourne", -37.814, 144.96332, 11);
-let erlangen = new Location("erlangen", 49.59099, 11.00783, 1);
+let melbourne = new Location('melbourne', -37.814, 144.96332, 11);
+let erlangen = new Location('erlangen', 49.59099, 11.00783, 1);
 let halves = new Halves(
     new Half(erlangen, 'upperhalf', false),
     new Half(melbourne, 'lowerhalf', false)
@@ -61,23 +62,28 @@ function updateCountdown(date) {
     let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
     let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    let countdownText = days + "d " + hours + "h " + minutes + "m " + seconds + "s ";
+    let countdownText = days + 'd ' + hours + 'h ' + minutes + 'm ' + seconds + 's ';
 
     if (distance <= 0) {
         // Countdown over.
         clearInterval(x);
         countdownText = '<div class="alert alert-success" role="alert">yaaay :D!</div>';
     }
-    document.getElementById("countdown").innerHTML = countdownText;
+    document.getElementById('countdown').innerHTML = countdownText;
 }
 
 function updateLocalTimes(date) {
+
+    function forceTwoDigits(i) {
+        return (i < 10) ? '0' + i : i;
+    }
+
     let hourErlangen = (date.getUTCHours() + 1) % 24;
     let hourMelbourne = (date.getUTCHours() + 11) % 24;
     let minute = forceTwoDigits(date.getMinutes());
     let second = forceTwoDigits(date.getSeconds());
-    document.getElementById("erlangen").innerHTML = hourErlangen + ":" + minute + ":" + second;
-    document.getElementById("melbourne").innerHTML = hourMelbourne + ":" + minute + ":" + second;
+    document.getElementById('erlangen').innerHTML = hourErlangen + ':' + minute + ':' + second;
+    document.getElementById('melbourne').innerHTML = hourMelbourne + ':' + minute + ':' + second;
 }
 
 function decideOnGradient(location, date) {
@@ -112,25 +118,16 @@ function nightModeTriggers(location, gradient) {
     }
 }
 
-// 1 second interval for countdown & clocks
-let x = setInterval(function () {
-
-    let date = new Date();
-    updateCountdown(date);
-    updateLocalTimes(date);
-
-    let gradient = decideOnGradient(erlangen, date);
-    setCityGradient(erlangen.city, gradient);
-    nightModeTriggers(erlangen, gradient);
-
-    gradient = decideOnGradient(melbourne, date);
-    setCityGradient(melbourne.city, gradient);
-    nightModeTriggers(melbourne, gradient);
-
-}, 1000);
-
-function forceTwoDigits(i) {
-    return (i < 10) ? "0" + i : i;
+function dayModeTriggers(location, gradient) {
+    let half = (location === halves.upper.location) ? halves.upper : halves.lower;
+    if (gradient === daytimeGradients.day && !half.hasSun) {
+        half.element.insertAdjacentHTML('afterbegin', '<div class="sunWrapper"><div class="sun"></div></div>');
+        half.hasSun = true;
+    }
+    if (gradient !== daytimeGradients.day && half.hasSun) {
+        half.element.removeChild(half.element.firstChild);
+        half.hasSun = false;
+    }
 }
 
 function getSunTimes(location) {
@@ -170,9 +167,30 @@ function getSunTimes(location) {
         });
 }
 
+function updateDaytimeBasedVisuals(date) {
+
+    function updateDaytimeVisualsOf(location) {
+        let gradient = decideOnGradient(location, date);
+        setCityGradient(location.city, gradient);
+        nightModeTriggers(location, gradient);
+        dayModeTriggers(location, gradient);
+    }
+
+    updateDaytimeVisualsOf(erlangen);
+    updateDaytimeVisualsOf(melbourne);
+}
+
+// 1 second interval for countdown & clocks
+let x = setInterval(function () {
+
+    let date = new Date();
+    updateCountdown(date);
+    updateLocalTimes(date);
+    updateDaytimeBasedVisuals(date);
+
+}, 1000);
+
 window.onload = function () {
     getSunTimes(melbourne);
     getSunTimes(erlangen);
 };
-
-

@@ -88,7 +88,7 @@ textarea {
 }
 
 /* ==========================================================================
-   Author's custom styles
+   Application specific styles
    ========================================================================== */
 
 body {
@@ -166,7 +166,7 @@ body {
 }
 
 /* ==========================================================================
-   Sun Animation https://jsfiddle.net/gThnQ/278/
+   Sun Animation based on https://jsfiddle.net/gThnQ/278/
    ========================================================================== */
 
 @keyframes drawArc1 {
@@ -176,7 +176,6 @@ body {
 }
 
 .sunWrapper {
-    z-index: -1;
     margin: auto;
     position: relative;
     bottom: -50vh;
