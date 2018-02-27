@@ -91,12 +91,15 @@ textarea {
    Author's custom styles
    ========================================================================== */
 
-
 body {
     --melbourne-top-color: black;
     --melbourne-bottom-color: black;
+    --melbourne-day-length: 0;
+    --melbourne-day-passed: 0;
     --erlangen-top-color: black;
     --erlangen-bottom-color: black;
+    --erlangen-day-length: 5s;
+    --erlangen-day-passed: -2.5s;
 }
 
 .foreground {
@@ -106,7 +109,7 @@ body {
     width: 100%;
 }
 
-.container {
+.clockContainer {
     display: grid;
     grid-template-columns: 1fr;
     grid-template-rows: 30vh 30vh 30vh;
@@ -123,14 +126,18 @@ body {
     font-size: 9vw;
 }
 
+.half {
+    overflow: hidden;
+    height: 50vh;
+    z-index: -2;
+}
+
 #lowerhalf {
     background: linear-gradient(to top, var(--melbourne-bottom-color), var(--melbourne-top-color));
-    height: 50vh;
 }
 
 #upperhalf {
     background: linear-gradient(to top, var(--erlangen-bottom-color), var(--erlangen-top-color));
-    height: 50vh;
     position: relative;
 }
 
@@ -158,6 +165,33 @@ body {
     background-image: radial-gradient(circle at 10px 15px, var(--melbourne-top-color) 12px, transparent 13px);
 }
 
+/* ==========================================================================
+   Sun Animation https://jsfiddle.net/gThnQ/278/
+   ========================================================================== */
+
+@keyframes drawArc1 {
+    0%  { transform: rotate(0deg);  }
+    100%{ transform: rotate(180deg);  }
+
+}
+
+.sunWrapper {
+    z-index: -1;
+    margin: auto;
+    position: relative;
+    bottom: -50vh;
+    width: 90vw;
+    animation: drawArc1 var(--erlangen-day-length) linear infinite;
+    animation-delay: var(--erlangen-day-passed);
+}
+
+.sun {
+    border-radius: 50%;
+    display: inline-block;
+    padding: 8vw;
+    background: yellow;
+    box-shadow: 0 0 8px 0 rgb(255, 238, 29), 0 0 20px 0 #ffc107;
+}
 
 /* ==========================================================================
    Print styles.
