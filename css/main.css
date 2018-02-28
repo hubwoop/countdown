@@ -180,8 +180,16 @@ body {
     position: relative;
     bottom: -50vh;
     width: 90vw;
+}
+
+#erlangenSunAnimation {
     animation: drawArc1 var(--erlangen-day-length) linear infinite;
     animation-delay: var(--erlangen-day-passed);
+}
+
+#melbourneSunAnimation {
+    animation: drawArc1 var(--melbourne-day-length) linear infinite;
+    animation-delay: var(--melbourne-day-passed);
 }
 
 .sun {

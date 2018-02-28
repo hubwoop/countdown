@@ -46,7 +46,7 @@ const daytimeGradients = {
     night: new Gradient('#0a1722', '#415a84'),
     day: new Gradient('#86d4f7', '#55a7ff')
 };
-
+let tick;
 let melbourne = new Location('melbourne', -37.814, 144.96332, 11);
 let erlangen = new Location('erlangen', 49.59099, 11.00783, 1);
 let halves = new Halves(
@@ -66,7 +66,7 @@ function updateCountdown(date) {
 
     if (distance <= 0) {
         // Countdown over.
-        clearInterval(x);
+        clearInterval(tick);
         countdownText = '<div class="alert alert-success" role="alert">yaaay :D!</div>';
     }
     document.getElementById('countdown').innerHTML = countdownText;
@@ -121,7 +121,13 @@ function nightModeTriggers(location, gradient) {
 function dayModeTriggers(location, gradient) {
     let half = (location === halves.upper.location) ? halves.upper : halves.lower;
     if (gradient === daytimeGradients.day && !half.hasSun) {
-        half.element.insertAdjacentHTML('afterbegin', '<div class="sunWrapper"><div class="sun"></div></div>');
+        let daySecondsAlreadyPassed = (location.sunrise - (new Date())) / 1000;
+        half.element.insertAdjacentHTML('afterbegin',
+            `<div class="sunWrapper" style="animation: drawArc1 ${location.dayLength}s linear infinite; 
+             animation-delay: ${daySecondsAlreadyPassed}s;"><div class="sun"></div></div>`
+        );
+        //document.body.style.setProperty(`--${location.city}-day-length`, location.dayLength);
+        //document.body.style.setProperty(`--${location.city}-day-passed`, daySecondsAlreadyPassed.toString());
         half.hasSun = true;
     }
     if (gradient !== daytimeGradients.day && half.hasSun) {
@@ -147,6 +153,7 @@ function getSunTimes(location) {
 
     let fetchDate = decideOnFetchDate();
 
+    console.log(`fetching: https://api.sunrise-sunset.org/json?lat=${location.latitude}&lng=${location.longitude}&formatted=0&date=${fetchDate}`);
     fetch(`https://api.sunrise-sunset.org/json?lat=${location.latitude}&lng=${location.longitude}&formatted=0&date=${fetchDate}`)
         .then(function (response) {
             if (response.status !== 200) {
@@ -159,7 +166,7 @@ function getSunTimes(location) {
                 location.sunset = new Date(data.results.sunset);
                 location.twilightBegin = new Date(data.results.civil_twilight_begin);
                 location.twilightEnd = new Date(data.results.civil_twilight_end);
-                location.dayLength = data.results.daylength;
+                location.dayLength = data.results.day_length;
             });
         })
         .catch(function (err) {
@@ -171,6 +178,7 @@ function updateDaytimeBasedVisuals(date) {
 
     function updateDaytimeVisualsOf(location) {
         let gradient = decideOnGradient(location, date);
+        // TODO: gradient in half speichern und dann nur triggers/sets ausführen wenn alter gradient != neuer gradient
         setCityGradient(location.city, gradient);
         nightModeTriggers(location, gradient);
         dayModeTriggers(location, gradient);
@@ -180,17 +188,18 @@ function updateDaytimeBasedVisuals(date) {
     updateDaytimeVisualsOf(melbourne);
 }
 
-// 1 second interval for countdown & clocks
-let x = setInterval(function () {
 
-    let date = new Date();
-    updateCountdown(date);
-    updateLocalTimes(date);
-    updateDaytimeBasedVisuals(date);
-
-}, 1000);
 
 window.onload = function () {
     getSunTimes(melbourne);
     getSunTimes(erlangen);
+
+    tick = setInterval(function () {
+
+        let date = new Date();
+        updateCountdown(date);
+        updateLocalTimes(date);
+        updateDaytimeBasedVisuals(date);
+
+    }, 1000);
 };
