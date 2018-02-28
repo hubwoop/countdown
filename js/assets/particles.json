@@ -49,10 +49,10 @@
     },
     "move": {
       "enable": true,
-      "speed": 1,
-      "direction": "none",
-      "random": true,
-      "straight": false,
+      "speed": 0.1,
+      "direction": "top-right",
+      "random": false,
+      "straight": true,
       "out_mode": "out",
       "bounce": false,
       "attract": {

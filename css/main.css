@@ -169,27 +169,18 @@ body {
    Sun Animation based on https://jsfiddle.net/gThnQ/278/
    ========================================================================== */
 
-@keyframes drawArc1 {
+@keyframes sunArc {
     0%  { transform: rotate(0deg);  }
     100%{ transform: rotate(180deg);  }
 
 }
 
 .sunWrapper {
+    z-index: -1;
     margin: auto;
     position: relative;
     bottom: -50vh;
     width: 90vw;
-}
-
-#erlangenSunAnimation {
-    animation: drawArc1 var(--erlangen-day-length) linear infinite;
-    animation-delay: var(--erlangen-day-passed);
-}
-
-#melbourneSunAnimation {
-    animation: drawArc1 var(--melbourne-day-length) linear infinite;
-    animation-delay: var(--melbourne-day-passed);
 }
 
 .sun {

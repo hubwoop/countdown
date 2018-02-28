@@ -5,34 +5,99 @@
 
 /* Object definitions */
 
-function Location(city, latitude, longitude, timeZoneOffset) {
-    this.sunset = 0;
-    this.sunrise = 0;
-    this.twilightBegin = 0;
-    this.twilightEnd = 0;
-    this.city = city;
-    this.latitude = latitude;
-    this.longitude = longitude;
-    this.timeZoneOffset = timeZoneOffset;
-    this.dayLength = 0;
+class Location {
+    constructor(city, latitude, longitude, timeZoneOffset) {
+        this.sunset = 0;
+        this.sunrise = 0;
+        this.twilightBegin = 0;
+        this.twilightEnd = 0;
+        this.city = city;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.timeZoneOffset = timeZoneOffset;
+        this.dayLength = 0;
+    }
 }
 
-function Gradient(top, bottom) {
-    this.top = top;
-    this.bottom = bottom;
+class Gradient {
+    constructor(top, bottom) {
+        this.top = top;
+        this.bottom = bottom;
+    }
+
 }
 
-function Halves(upper, lower) {
-    this.upper = upper;
-    this.lower = lower;
+class Halves {
+    constructor(upper, lower) {
+        this.upper = upper;
+        this.lower = lower;
+        this.lastReturend = null;
+    }
+
+    // https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Iteration_protocols
+    [Symbol.iterator]() {
+        return {
+            next: () => {
+                if (null === this.lastReturend) {
+                    this.lastReturend = this.upper;
+                    return {value: this.upper, done: false};
+                } else if (this.upper === this.lastReturend) {
+                    this.lastReturend = this.lower;
+                    return {value: this.lower, done: false};
+                } else {
+                    this.lastReturend = null;
+                    return {done: true};
+                }
+            }
+        }
+    };
 }
 
-function Half(location, id) {
-    this.location = location;
-    this.id = id;
-    this.hasParticles = false;
-    this.hasSun = false;
-    this.element = document.getElementById(id);
+class Half {
+
+    constructor(location, id) {
+        this.location = location;
+        this.id = id;
+        this.hasParticles = false;
+        this.hasSun = false;
+        this.element = document.getElementById(id);
+        this.gradient = null;
+    }
+
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set
+    set currentDayTime(gradient) {
+        this.gradient = gradient;
+        document.body.style.setProperty(`--${this.location.city}-top-color`, gradient.top);
+        document.body.style.setProperty(`--${this.location.city}-bottom-color`, gradient.bottom);
+        this.toggleNightMode();
+        this.toggleDayMode();
+    }
+
+    toggleNightMode() {
+        if (this.gradient === DAYTIME_GRADIENTS.night && !this.hasParticles) {
+            particlesJS.load(this.id, 'js/assets/particles.json');
+            this.hasParticles = true;
+        }
+        if (this.gradient !== DAYTIME_GRADIENTS.night && this.hasParticles) {
+            this.element.removeChild(this.element.firstChild);
+            this.hasParticles = false;
+        }
+    }
+
+    toggleDayMode() {
+        if (this.gradient === DAYTIME_GRADIENTS.day && !this.hasSun) {
+            let daySecondsAlreadyPassed = (this.location.sunrise - (new Date())) / 1000;
+            this.element.insertAdjacentHTML('afterbegin',
+                `<div class="sunWrapper" style="animation: sunArc ${this.location.dayLength}s linear infinite; 
+                 animation-delay: ${daySecondsAlreadyPassed}s;"><div class="sun"></div></div>`
+            );
+            this.hasSun = true;
+        }
+        if (this.gradient !== DAYTIME_GRADIENTS.day && this.hasSun) {
+            this.element.removeChild(this.element.firstChild);
+            this.hasSun = false;
+        }
+    }
 }
 
 
@@ -40,13 +105,13 @@ function Half(location, id) {
 
 const countdownDate = new Date(Date.UTC(2018, 7, 2, 19, 35)).getTime();
 
-const daytimeGradients = {
+const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
     dusk: new Gradient('#485661', '#ff822b'),
     night: new Gradient('#0a1722', '#415a84'),
     day: new Gradient('#86d4f7', '#55a7ff')
 };
-let tick;
+let ticker;
 let melbourne = new Location('melbourne', -37.814, 144.96332, 11);
 let erlangen = new Location('erlangen', 49.59099, 11.00783, 1);
 let halves = new Halves(
@@ -54,6 +119,7 @@ let halves = new Halves(
     new Half(melbourne, 'lowerhalf', false)
 );
 
+/* functions */
 function updateCountdown(date) {
 
     let now = date.getTime();
@@ -66,7 +132,7 @@ function updateCountdown(date) {
 
     if (distance <= 0) {
         // Countdown over.
-        clearInterval(tick);
+        clearInterval(ticker);
         countdownText = '<div class="alert alert-success" role="alert">yaaay :D!</div>';
     }
     document.getElementById('countdown').innerHTML = countdownText;
@@ -90,49 +156,14 @@ function decideOnGradient(location, date) {
     // console.log(`${date} >= ${location.sunrise} && ${date} <= ${location.sunset}`);
     if (date >= location.twilightBegin && date <= location.twilightEnd) {
         if (date <= location.sunrise) {
-            return daytimeGradients.dawn;
+            return DAYTIME_GRADIENTS.dawn;
         } else if (date <= location.sunset) {
-            return daytimeGradients.day;
+            return DAYTIME_GRADIENTS.day;
         } else {
-            return daytimeGradients.dusk;
+            return DAYTIME_GRADIENTS.dusk;
         }
     } else {
-        return daytimeGradients.night;
-    }
-}
-
-function setCityGradient(city, gradient) {
-    document.body.style.setProperty(`--${city}-top-color`, gradient.top);
-    document.body.style.setProperty(`--${city}-bottom-color`, gradient.bottom);
-}
-
-function nightModeTriggers(location, gradient) {
-    let half = (location === halves.upper.location) ? halves.upper : halves.lower;
-    if (gradient === daytimeGradients.night && !half.hasParticles) {
-        particlesJS.load(half.id, 'js/assets/particles.json');
-        half.hasParticles = true;
-    }
-    if (gradient !== daytimeGradients.night && half.hasParticles) {
-        half.element.removeChild(half.element.firstChild);
-        half.hasParticles = false;
-    }
-}
-
-function dayModeTriggers(location, gradient) {
-    let half = (location === halves.upper.location) ? halves.upper : halves.lower;
-    if (gradient === daytimeGradients.day && !half.hasSun) {
-        let daySecondsAlreadyPassed = (location.sunrise - (new Date())) / 1000;
-        half.element.insertAdjacentHTML('afterbegin',
-            `<div class="sunWrapper" style="animation: drawArc1 ${location.dayLength}s linear infinite; 
-             animation-delay: ${daySecondsAlreadyPassed}s;"><div class="sun"></div></div>`
-        );
-        //document.body.style.setProperty(`--${location.city}-day-length`, location.dayLength);
-        //document.body.style.setProperty(`--${location.city}-day-passed`, daySecondsAlreadyPassed.toString());
-        half.hasSun = true;
-    }
-    if (gradient !== daytimeGradients.day && half.hasSun) {
-        half.element.removeChild(half.element.firstChild);
-        half.hasSun = false;
+        return DAYTIME_GRADIENTS.night;
     }
 }
 
@@ -175,26 +206,20 @@ function getSunTimes(location) {
 }
 
 function updateDaytimeBasedVisuals(date) {
-
-    function updateDaytimeVisualsOf(location) {
-        let gradient = decideOnGradient(location, date);
-        // TODO: gradient in half speichern und dann nur triggers/sets ausführen wenn alter gradient != neuer gradient
-        setCityGradient(location.city, gradient);
-        nightModeTriggers(location, gradient);
-        dayModeTriggers(location, gradient);
+    for (const half of halves) {
+        const gradient = decideOnGradient(half.location, date);
+        if (half.gradient !== gradient) {
+            half.currentDayTime = gradient;
+        }
     }
-
-    updateDaytimeVisualsOf(erlangen);
-    updateDaytimeVisualsOf(melbourne);
 }
-
 
 
 window.onload = function () {
     getSunTimes(melbourne);
     getSunTimes(erlangen);
 
-    tick = setInterval(function () {
+    ticker = setInterval(function () {
 
         let date = new Date();
         updateCountdown(date);
