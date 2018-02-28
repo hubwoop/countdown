@@ -69,7 +69,7 @@ fieldset {
 }
 
 /*
- * Allow only vertical resizing of textareas.
+ * Allow only vertical resizing of text areas.
  */
 
 textarea {
@@ -80,7 +80,7 @@ textarea {
    Browser Upgrade Prompt
    ========================================================================== */
 
-.browserupgrade {
+.browserUpgrade {
     margin: 0.2em 0;
     background: #ccc;
     color: #000;
@@ -94,12 +94,8 @@ textarea {
 body {
     --melbourne-top-color: black;
     --melbourne-bottom-color: black;
-    --melbourne-day-length: 0;
-    --melbourne-day-passed: 0;
     --erlangen-top-color: black;
     --erlangen-bottom-color: black;
-    --erlangen-day-length: 5s;
-    --erlangen-day-passed: -2.5s;
 }
 
 .foreground {
@@ -118,10 +114,6 @@ body {
     user-select: none;
 }
 
-#countdownWrapper {
-    z-index: 999;
-}
-
 #countdown {
     font-size: 9vw;
 }
@@ -129,19 +121,18 @@ body {
 .half {
     overflow: hidden;
     height: 50vh;
-    z-index: -2;
 }
 
-#lowerhalf {
+#lowerHalf {
     background: linear-gradient(to top, var(--melbourne-bottom-color), var(--melbourne-top-color));
 }
 
-#upperhalf {
+#upperHalf {
     background: linear-gradient(to top, var(--erlangen-bottom-color), var(--erlangen-top-color));
     position: relative;
 }
 
-#upperhalf::before {
+#upperHalf::before {
     content: "";
     position: absolute;
     left: 0;
@@ -153,7 +144,7 @@ body {
     background-image: radial-gradient(circle at 10px -5px, transparent 12px, var(--melbourne-top-color) 13px);
 }
 
-#upperhalf::after {
+#upperHalf::after {
     content: "";
     position: absolute;
     left: 0;
@@ -176,7 +167,6 @@ body {
 }
 
 .sunWrapper {
-    z-index: -1;
     margin: auto;
     position: relative;
     bottom: -50vh;

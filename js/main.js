@@ -88,8 +88,8 @@ class Half {
         if (this.gradient === DAYTIME_GRADIENTS.day && !this.hasSun) {
             let daySecondsAlreadyPassed = (this.location.sunrise - (new Date())) / 1000;
             this.element.insertAdjacentHTML('afterbegin',
-                `<div class="sunWrapper" style="animation: sunArc ${this.location.dayLength}s linear infinite; 
-                 animation-delay: ${daySecondsAlreadyPassed}s;"><div class="sun"></div></div>`
+                `<div class="sunWrapper" style="animation: sunArc ${this.location.dayLength}s linear infinite;`
+                 + `animation-delay: ${daySecondsAlreadyPassed}s;"><div class="sun"></div></div>`
             );
             this.hasSun = true;
         }
@@ -115,20 +115,20 @@ let ticker;
 let melbourne = new Location('melbourne', -37.814, 144.96332, 11);
 let erlangen = new Location('erlangen', 49.59099, 11.00783, 1);
 let halves = new Halves(
-    new Half(erlangen, 'upperhalf', false),
-    new Half(melbourne, 'lowerhalf', false)
+    new Half(erlangen, 'upperHalf', false),
+    new Half(melbourne, 'lowerHalf', false)
 );
 
-/* functions */
+/* Functions */
 function updateCountdown(date) {
 
-    let now = date.getTime();
-    let distance = countdownDate - now;
-    let days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    let hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    let minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    let seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    let countdownText = days + 'd ' + hours + 'h ' + minutes + 'm ' + seconds + 's ';
+    const now = date.getTime();
+    const distance = countdownDate - now;
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    let countdownText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 
     if (distance <= 0) {
         // Countdown over.
@@ -148,8 +148,8 @@ function updateLocalTimes(date) {
     let hourMelbourne = (date.getUTCHours() + 11) % 24;
     let minute = forceTwoDigits(date.getMinutes());
     let second = forceTwoDigits(date.getSeconds());
-    document.getElementById('erlangen').innerHTML = hourErlangen + ':' + minute + ':' + second;
-    document.getElementById('melbourne').innerHTML = hourMelbourne + ':' + minute + ':' + second;
+    document.getElementById('erlangen').innerHTML = `${hourErlangen}:${minute}:${second}`;
+    document.getElementById('melbourne').innerHTML = `${hourMelbourne}:${minute}:${second}`;
 }
 
 function decideOnGradient(location, date) {
@@ -216,8 +216,10 @@ function updateDaytimeBasedVisuals(date) {
 
 
 window.onload = function () {
-    getSunTimes(melbourne);
-    getSunTimes(erlangen);
+
+    for (const half of halves) {
+        getSunTimes(half.location);
+    }
 
     ticker = setInterval(function () {
 
