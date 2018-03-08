@@ -130,6 +130,7 @@ body {
 #upperHalf {
     background: linear-gradient(to top, var(--erlangen-bottom-color), var(--erlangen-top-color));
     position: relative;
+    z-index: -1;
 }
 
 #upperHalf::before {
@@ -163,7 +164,6 @@ body {
 @keyframes sunArc {
     0%  { transform: rotate(0deg);  }
     100%{ transform: rotate(180deg);  }
-
 }
 
 .sunWrapper {
@@ -171,6 +171,7 @@ body {
     position: relative;
     bottom: -50vh;
     width: 90vw;
+    z-index: -2;
 }
 
 .sun {
