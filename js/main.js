@@ -104,6 +104,7 @@ class Half {
 /* Globals */
 
 const countdownDate = new Date(Date.UTC(2018, 7, 2, 19, 35)).getTime();
+const totalDistance = countdownDate - new Date(Date.UTC(2018, 1, 10, 9, 30, 0)).getTime();
 
 const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
@@ -124,6 +125,7 @@ function updateCountdown(date) {
 
     const now = date.getTime();
     const distance = countdownDate - now;
+    let progress = ((totalDistance - distance) / totalDistance)*100;
     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
     const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -134,7 +136,9 @@ function updateCountdown(date) {
         // Countdown over.
         clearInterval(ticker);
         countdownText = '<div class="alert alert-success" role="alert">yaaay :D!</div>';
+        progress = 100
     }
+    document.getElementById('progress').style.width = `${progress}%`;
     document.getElementById('countdown').innerHTML = countdownText;
 }
 
