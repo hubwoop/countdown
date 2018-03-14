@@ -65,7 +65,7 @@ class Half {
     }
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set
-    set currentDayTime(gradient) {
+    set setCurrentDayTime(gradient) {
         document.body.style.setProperty(`--${this.location.city}-top-color`, gradient.top);
         document.body.style.setProperty(`--${this.location.city}-bottom-color`, gradient.bottom);
         this.toggleNightMode();
@@ -211,8 +211,7 @@ function getSunTimes(location) {
 
 function updateDaytimeBasedVisuals(date) {
     for (const half of halves) {
-        const gradient = decideOnGradient(half.location, date);
-        half.currentDayTime = gradient;
+        half.setCurrentDayTime = decideOnGradient(half.location, date);
     }
 }
 
