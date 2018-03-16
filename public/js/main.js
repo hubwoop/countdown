@@ -98,6 +98,20 @@ class Half {
             this.hasSun = false;
         }
     }
+
+    set SunProgression(percent) {
+        if(this.gradient === DAYTIME_GRADIENTS.day && this.hasSun) {
+            if(percent < 0 || percent > 100) {
+                throw "Please choose a value between 0 and 100"
+            }
+            let seconds = ((this.location.sunrise - this.location.sunset) / 1000) * (percent / 100);
+            console.log(seconds);
+            this.element.firstChild.style.setProperty("animation-delay", `${seconds}s`);
+        } else {
+            throw `There is no sun on ${this.location.city}-half...`;
+        }
+
+    }
 }
 
 
