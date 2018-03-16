@@ -65,12 +65,25 @@ class Half {
     }
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set
-    set setCurrentDayTime(gradient) {
+    set setDayTime(gradient) {
         document.body.style.setProperty(`--${this.location.city}-top-color`, gradient.top);
         document.body.style.setProperty(`--${this.location.city}-bottom-color`, gradient.bottom);
         this.gradient = gradient;
         this.toggleNightMode();
         this.toggleDayMode();
+    }
+
+    set setSunProgression(percent) {
+        if(this.gradient === DAYTIME_GRADIENTS.day && this.hasSun) {
+            if(percent < 0 || percent > 100) {
+                throw "Please choose a value between 0 and 100"
+            }
+            let seconds = ((this.location.sunrise - this.location.sunset) / 1000) * (percent / 100);
+            console.log(seconds);
+            this.element.firstChild.style.setProperty("animation-delay", `${seconds}s`);
+        } else {
+            throw `There is no sun on ${this.location.city}-half...`;
+        }
     }
 
     toggleNightMode() {
@@ -86,34 +99,20 @@ class Half {
 
     toggleDayMode() {
         if (this.gradient === DAYTIME_GRADIENTS.day && !this.hasSun) {
-            let daySecondsAlreadyPassed = (this.location.sunrise - (new Date())) / 1000;
+            let dayPercentagePassed = (((new Date() - this.location.sunrise) / 1000) / (this.location.dayLength)) * 100;
             this.element.insertAdjacentHTML('afterbegin',
-                `<div class="sunWrapper" style="animation: sunArc ${this.location.dayLength}s linear infinite;`
-                 + `animation-delay: ${daySecondsAlreadyPassed}s;"><div class="sun"></div></div>`
+                `<div class="sunWrapper" style="animation: sunArc ${this.location.dayLength}s linear infinite;">`
+                 + '<div class="sun"></div></div>'
             );
             this.hasSun = true;
+            this.setSunProgression = dayPercentagePassed;
         }
         if (this.gradient !== DAYTIME_GRADIENTS.day && this.hasSun) {
             this.element.removeChild(this.element.firstChild);
             this.hasSun = false;
         }
     }
-
-    set SunProgression(percent) {
-        if(this.gradient === DAYTIME_GRADIENTS.day && this.hasSun) {
-            if(percent < 0 || percent > 100) {
-                throw "Please choose a value between 0 and 100"
-            }
-            let seconds = ((this.location.sunrise - this.location.sunset) / 1000) * (percent / 100);
-            console.log(seconds);
-            this.element.firstChild.style.setProperty("animation-delay", `${seconds}s`);
-        } else {
-            throw `There is no sun on ${this.location.city}-half...`;
-        }
-
-    }
 }
-
 
 /* Globals */
 
@@ -226,10 +225,9 @@ function getSunTimes(location) {
 
 function updateDaytimeBasedVisuals(date) {
     for (const half of halves) {
-        half.setCurrentDayTime = decideOnGradient(half.location, date);
+        half.setDayTime = decideOnGradient(half.location, date);
     }
 }
-
 
 function runTicker() {
     ticker = setInterval(function () {
