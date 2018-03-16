@@ -74,13 +74,20 @@ class Half {
     }
 
     set setSunProgression(percent) {
-        if(this.gradient === DAYTIME_GRADIENTS.day && this.hasSun) {
+        if(this.hasSun) {
             if(percent < 0 || percent > 100) {
                 throw "Please choose a value between 0 and 100"
             }
             let seconds = ((this.location.sunrise - this.location.sunset) / 1000) * (percent / 100);
-            console.log(seconds);
             this.element.firstChild.style.setProperty("animation-delay", `${seconds}s`);
+        } else {
+            throw `There is no sun on ${this.location.city}-half...`;
+        }
+    }
+
+    set setSunAnimationDuration(duration) {
+        if(this.hasSun) {
+            this.element.firstChild.style.setProperty("animation", `sunArc ${duration}s linear infinite`);
         } else {
             throw `There is no sun on ${this.location.city}-half...`;
         }
@@ -100,11 +107,9 @@ class Half {
     toggleDayMode() {
         if (this.gradient === DAYTIME_GRADIENTS.day && !this.hasSun) {
             let dayPercentagePassed = (((new Date() - this.location.sunrise) / 1000) / (this.location.dayLength)) * 100;
-            this.element.insertAdjacentHTML('afterbegin',
-                `<div class="sunWrapper" style="animation: sunArc ${this.location.dayLength}s linear infinite;">`
-                 + '<div class="sun"></div></div>'
-            );
+            this.element.insertAdjacentHTML('afterbegin','<div class="sunWrapper"><div class="sun"></div></div>');
             this.hasSun = true;
+            this.setSunAnimationDuration = this.location.dayLength;
             this.setSunProgression = dayPercentagePassed;
         }
         if (this.gradient !== DAYTIME_GRADIENTS.day && this.hasSun) {
