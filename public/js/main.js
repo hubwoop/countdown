@@ -68,9 +68,9 @@ class Half {
     set setCurrentDayTime(gradient) {
         document.body.style.setProperty(`--${this.location.city}-top-color`, gradient.top);
         document.body.style.setProperty(`--${this.location.city}-bottom-color`, gradient.bottom);
+        this.gradient = gradient;
         this.toggleNightMode();
         this.toggleDayMode();
-        this.gradient = gradient;
     }
 
     toggleNightMode() {
@@ -113,6 +113,7 @@ const DAYTIME_GRADIENTS = {
     day: new Gradient('#86d4f7', '#55a7ff')
 };
 let ticker;
+let halted = false;
 let melbourne = new Location('melbourne', -37.814, 144.96332, 11);
 let erlangen = new Location('erlangen', 49.59099, 11.00783, 1);
 let halves = new Halves(
@@ -216,12 +217,7 @@ function updateDaytimeBasedVisuals(date) {
 }
 
 
-window.onload = function () {
-
-    for (const half of halves) {
-        getSunTimes(half.location);
-    }
-
+function runTicker() {
     ticker = setInterval(function () {
 
         let date = new Date();
@@ -230,4 +226,32 @@ window.onload = function () {
         updateDaytimeBasedVisuals(date);
 
     }, 1000);
+    halted = false;
+    return ticker;
+}
+
+window.onload = function () {
+    console.log("Available commands:\nhalt() stops periodic updates.\nresume() enables periodic updates.")
+    for (const half of halves) {
+        getSunTimes(half.location);
+    }
+    ticker = runTicker();
 };
+
+function halt() {
+    if(!halted) {
+        clearInterval(ticker);
+        halted = true;
+    } else {
+        console.log("Already HALTED...")
+    }
+}
+
+function resume() {
+    if(!halted) {
+        console.log("Already RUNNING...")
+    } else {
+        ticker = runTicker();
+    }
+
+}
