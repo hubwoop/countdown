@@ -24,7 +24,6 @@ class Gradient {
         this.top = top;
         this.bottom = bottom;
     }
-
 }
 
 class Halves {
@@ -54,7 +53,6 @@ class Halves {
 }
 
 class Half {
-
     constructor(location, id) {
         this.location = location;
         this.id = id;
@@ -123,13 +121,14 @@ class Half {
 
 const countdownDate = new Date(Date.UTC(2018, 7, 2, 19, 35)).getTime();
 const totalDistance = countdownDate - new Date(Date.UTC(2018, 1, 10, 9, 30, 0)).getTime();
-
 const DAYTIME_GRADIENTS = {
-    dawn: new Gradient('#63adf7', '#ffb539'),
-    dusk: new Gradient('#485661', '#ff822b'),
+    dawn:  new Gradient('#63adf7', '#ffb539'),
+    dusk:  new Gradient('#485661', '#ff822b'),
     night: new Gradient('#0a1722', '#415a84'),
-    day: new Gradient('#86d4f7', '#55a7ff')
+    day:   new Gradient('#86d4f7', '#55a7ff')
 };
+const cloudHTML = generateCloudHTML();
+
 let ticker;
 let halted = false;
 let melbourne = new Location('melbourne', -37.814, 144.96332, 11);
@@ -140,6 +139,7 @@ let halves = new Halves(
 );
 
 /* Functions */
+
 function updateCountdown(date) {
 
     const now = date.getTime();
@@ -254,6 +254,13 @@ window.onload = function () {
     }
     ticker = runTicker();
 };
+
+function generateCloudHTML() {
+    let cloudHTML = '<div id="clouds">';
+    for (let i = 1; i < 6; i++) { cloudHTML += `<div class="cloud x${i}"></div>` }
+    cloudHTML += '</div>';
+    return cloudHTML;
+}
 
 function halt() {
     if(!halted) {
