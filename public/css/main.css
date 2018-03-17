@@ -96,6 +96,7 @@ body {
     --melbourne-bottom-color: black;
     --erlangen-top-color: black;
     --erlangen-bottom-color: black;
+    --sun-size: 8vw;
 }
 
 .foreground {
@@ -167,26 +168,22 @@ body {
     color: white;
 }
 /* ==========================================================================
-   Sun Animation based on https://jsfiddle.net/gThnQ/278/
+   Sun Animation based on https://jsfiddle.net/w23v50h5/123/
    ========================================================================== */
 
 @keyframes sunArc {
-    0%  { transform: rotate(0deg);  }
-    100%{ transform: rotate(180deg);  }
-}
-
-.sunWrapper {
-    margin: auto;
-    position: relative;
-    bottom: -50vh;
-    width: 90vw;
+    from { transform: rotate(-180deg) translateX(40vw) rotate(180deg); }
+    to   { transform: rotate(0deg) translateX(40vw) rotate(0deg); }
 }
 
 .sun {
-    border-radius: 50%;
-    display: inline-block;
-    padding: 8vw;
     background: yellow;
+    display: inline-block;
+    position: relative;
+    padding: var(--sun-size);
+    border-radius: 50%;
+    left: calc(50vw - var(--sun-size));
+    bottom: -50vh;
     box-shadow: 0 0 8px 0 rgb(255, 238, 29), 0 0 20px 0 #ffc107;
 }
 

@@ -107,7 +107,7 @@ class Half {
     toggleDayMode() {
         if (this.gradient === DAYTIME_GRADIENTS.day && !this.hasSun) {
             let dayPercentagePassed = (((new Date() - this.location.sunrise) / 1000) / (this.location.dayLength)) * 100;
-            this.element.insertAdjacentHTML('afterbegin','<div class="sunWrapper"><div class="sun"></div></div>');
+            this.element.insertAdjacentHTML('afterbegin','<div class="sun"></div>');
             this.hasSun = true;
             this.setSunAnimationDuration = this.location.dayLength;
             this.setSunProgression = dayPercentagePassed;
