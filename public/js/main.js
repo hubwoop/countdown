@@ -72,8 +72,8 @@ class Half {
     }
 
     set setSunProgression(percent) {
-        if(this.hasSun) {
-            if(percent < 0 || percent > 100) {
+        if (this.hasSun) {
+            if (percent < 0 || percent > 100) {
                 throw "Please choose a value between 0 and 100"
             }
             let seconds = ((this.location.sunrise - this.location.sunset) / 1000) * (percent / 100);
@@ -84,7 +84,7 @@ class Half {
     }
 
     set setSunAnimationDuration(duration) {
-        if(this.hasSun) {
+        if (this.hasSun) {
             this.element.firstChild.style.setProperty("animation", `sunArc ${duration}s linear infinite`);
         } else {
             throw `There is no sun on ${this.location.city}-half...`;
@@ -105,7 +105,7 @@ class Half {
     toggleDayMode() {
         if (this.gradient === DAYTIME_GRADIENTS.day && !this.hasSun) {
             let dayPercentagePassed = (((new Date() - this.location.sunrise) / 1000) / (this.location.dayLength)) * 100;
-            this.element.insertAdjacentHTML('afterbegin','<div class="sun"></div>');
+            this.element.insertAdjacentHTML('afterbegin', '<div class="sun"></div>');
             this.hasSun = true;
             this.setSunAnimationDuration = this.location.dayLength;
             this.setSunProgression = dayPercentagePassed;
@@ -122,10 +122,10 @@ class Half {
 const countdownDate = new Date(Date.UTC(2018, 7, 2, 19, 35)).getTime();
 const totalDistance = countdownDate - new Date(Date.UTC(2018, 1, 10, 9, 30, 0)).getTime();
 const DAYTIME_GRADIENTS = {
-    dawn:  new Gradient('#63adf7', '#ffb539'),
-    dusk:  new Gradient('#485661', '#ff822b'),
+    dawn: new Gradient('#63adf7', '#ffb539'),
+    dusk: new Gradient('#485661', '#ff822b'),
     night: new Gradient('#0a1722', '#415a84'),
-    day:   new Gradient('#86d4f7', '#55a7ff')
+    day: new Gradient('#86d4f7', '#55a7ff')
 };
 const cloudHTML = generateCloudHTML();
 
@@ -144,7 +144,7 @@ function updateCountdown(date) {
 
     const now = date.getTime();
     const distance = countdownDate - now;
-    let progress = ((totalDistance - distance) / totalDistance)*100;
+    let progress = ((totalDistance - distance) / totalDistance) * 100;
     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
     const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
@@ -226,6 +226,7 @@ function getSunTimes(location) {
         .catch(function (err) {
             console.log('Fetch Error :-S', err);
         });
+
 }
 
 function updateDaytimeBasedVisuals(date) {
@@ -248,7 +249,7 @@ function runTicker() {
 }
 
 window.onload = function () {
-    console.log("Available commands:\nhalt() stops periodic updates.\nresume() enables periodic updates.")
+    console.log("Available commands:\nhalt() stops periodic updates.\nresume() enables periodic updates.");
     for (const half of halves) {
         getSunTimes(half.location);
     }
@@ -257,13 +258,15 @@ window.onload = function () {
 
 function generateCloudHTML() {
     let cloudHTML = '<div id="clouds">';
-    for (let i = 1; i < 6; i++) { cloudHTML += `<div class="cloud x${i}"></div>` }
+    for (let i = 1; i < 6; i++) {
+        cloudHTML += `<div class="cloud x${i}"></div>`
+    }
     cloudHTML += '</div>';
     return cloudHTML;
 }
 
 function halt() {
-    if(!halted) {
+    if (!halted) {
         clearInterval(ticker);
         halted = true;
     } else {
@@ -272,7 +275,7 @@ function halt() {
 }
 
 function resume() {
-    if(!halted) {
+    if (!halted) {
         console.log("Already RUNNING...")
     } else {
         ticker = runTicker();
