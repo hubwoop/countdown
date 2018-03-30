@@ -6,7 +6,7 @@
 /* Object definitions */
 
 class Location {
-    constructor(city, latitude, longitude, timeZoneOffset) {
+    constructor(city, latitude, longitude, timeZoneOffset, woeid) {
         this.sunset = 0;
         this.sunrise = 0;
         this.twilightBegin = 0;
@@ -16,6 +16,7 @@ class Location {
         this.longitude = longitude;
         this.timeZoneOffset = timeZoneOffset;
         this.dayLength = 0;
+        this.woeid = woeid;
     }
 }
 
@@ -131,8 +132,8 @@ const cloudHTML = generateCloudHTML();
 
 let ticker;
 let halted = false;
-let melbourne = new Location('melbourne', -37.814, 144.96332, 11);
-let erlangen = new Location('erlangen', 49.59099, 11.00783, 1);
+let melbourne = new Location('melbourne', -37.814, 144.96332, 11, 1103816);
+let erlangen = new Location('erlangen', 49.59099, 11.00783, 1, 680564);
 let halves = new Halves(
     new Half(erlangen, 'upperHalf', false),
     new Half(melbourne, 'lowerHalf', false)
@@ -227,6 +228,27 @@ function getSunTimes(location) {
             console.log('Fetch Error :-S', err);
         });
 
+}
+
+function getWeather(location) {
+    // Nürnberg https://www.metaweather.com/api/location/680564/
+    // Melbourne https://www.metaweather.com/api/location/1103816/
+    fetch(`https://www.metaweather.com/api/location/${location.woeid}/`)
+        .then(function (response) {
+            if (response.status !== 200) {
+                console.log('Looks like there was a problem. Status Code: ' + response.status);
+                return;
+            }
+
+            response.json().then(function (data) {
+                // data structure reference: https://www.metaweather.com/api/
+                //location.sunrise = new Date(data.results.sunrise);
+
+            });
+        })
+        .catch(function (err) {
+            console.log('Fetch Error :-S', err);
+        });
 }
 
 function updateDaytimeBasedVisuals(date) {
