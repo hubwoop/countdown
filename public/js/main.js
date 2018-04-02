@@ -65,18 +65,20 @@ class Half {
         this.gradient = null;
     }
 
+    hasChildElementWithClass(css_class) {
+        return this.element.getElementsByClassName(css_class).length > 0;
+    }
+
     get hasSun() {
-        const potential_suns = this.element.getElementsByClassName("sun");
-        return potential_suns.length > 0;
+        return this.hasChildElementWithClass("sun")
     }
 
     get hasParticles() {
-        const potential_particles = this.element.getElementsByClassName("particles-js-canvas-el");
-        return potential_particles.length > 0;
+        return this.hasChildElementWithClass("particles-js-canvas-el")
     }
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set
-    set setDayTime(gradient) {
+    set DayTime(gradient) {
         document.body.style.setProperty(`--${this.location.city}-top-color`, gradient.top);
         document.body.style.setProperty(`--${this.location.city}-bottom-color`, gradient.bottom);
         this.gradient = gradient;
@@ -241,7 +243,7 @@ function getSunTimes(location) {
 
 function updateDaytimeBasedVisuals(date) {
     for (const half of halves) {
-        half.setDayTime = decideOnGradient(half.location, date);
+        half.DayTime = decideOnGradient(half.location, date);
     }
 }
 
