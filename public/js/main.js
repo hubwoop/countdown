@@ -61,10 +61,18 @@ class Half {
     constructor(location, id) {
         this.location = location;
         this.id = id;
-        this.hasParticles = false;
-        this.hasSun = false;
         this.element = document.getElementById(id);
         this.gradient = null;
+    }
+
+    get hasSun() {
+        const potential_suns = this.element.getElementsByClassName("sun");
+        return potential_suns.length > 0;
+    }
+
+    get hasParticles() {
+        const potential_particles = this.element.getElementsByClassName("particles-js-canvas-el");
+        return potential_particles.length > 0;
     }
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set
@@ -99,11 +107,9 @@ class Half {
     toggleNightMode() {
         if (this.gradient === DAYTIME_GRADIENTS.night && !this.hasParticles) {
             particlesJS.load(this.id, 'js/assets/particles.json');
-            this.hasParticles = true;
         }
         if (this.gradient !== DAYTIME_GRADIENTS.night && this.hasParticles) {
             this.element.removeChild(this.element.firstChild);
-            this.hasParticles = false;
         }
     }
 
@@ -111,13 +117,11 @@ class Half {
         if (this.gradient === DAYTIME_GRADIENTS.day && !this.hasSun) {
             let dayPercentagePassed = (((new Date() - this.location.sunrise) / 1000) / (this.location.dayLength)) * 100;
             this.element.insertAdjacentHTML('afterbegin', '<div class="sun"></div>');
-            this.hasSun = true;
             this.setSunAnimationDuration = this.location.dayLength;
             this.setSunProgression = dayPercentagePassed;
         }
         if (this.gradient !== DAYTIME_GRADIENTS.day && this.hasSun) {
             this.element.removeChild(this.element.firstChild);
-            this.hasSun = false;
         }
     }
 }
@@ -139,8 +143,8 @@ let halted = false;
 let melbourne = new Location('melbourne', -37.814, 144.96332, 10, 1103816);
 let erlangen = new Location('erlangen', 49.59099, 11.00783, 2, 680564);
 let halves = new Halves(
-    new Half(erlangen, 'upperHalf', false),
-    new Half(melbourne, 'lowerHalf', false)
+    new Half(erlangen, 'upperHalf'),
+    new Half(melbourne, 'lowerHalf')
 );
 
 /* Functions */
