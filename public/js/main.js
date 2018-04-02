@@ -137,7 +137,7 @@ const cloudHTML = generateCloudHTML();
 let ticker;
 let halted = false;
 let melbourne = new Location('melbourne', -37.814, 144.96332, 10, 1103816);
-let erlangen = new Location('erlangen', 49.59099, 11.00783, 1, 680564);
+let erlangen = new Location('erlangen', 49.59099, 11.00783, 2, 680564);
 let halves = new Halves(
     new Half(erlangen, 'upperHalf', false),
     new Half(melbourne, 'lowerHalf', false)
