@@ -6,6 +6,7 @@
 /* Object definitions */
 
 class Location {
+
     constructor(city, latitude, longitude, timeZoneOffset, whereOnEarthID) {
         this.sunset = 0;
         this.sunrise = 0;
@@ -22,16 +23,23 @@ class Location {
         this.termperature = null;
         this.weather = null;
     }
+
+    get dayTimeProgression() {
+        return (((new Date() - this.sunrise) / 1000) / (this.dayLength)) * 100;
+    }
 }
 
 class Gradient {
+
     constructor(top, bottom) {
         this.top = top;
         this.bottom = bottom;
     }
+
 }
 
 class Halves {
+
     constructor(upper, lower) {
         this.upper = upper;
         this.lower = lower;
@@ -58,6 +66,7 @@ class Halves {
 }
 
 class Half {
+
     constructor(location, id) {
         this.location = location;
         this.id = id;
@@ -117,10 +126,9 @@ class Half {
 
     toggleDayMode() {
         if (this.gradient === DAYTIME_GRADIENTS.day && !this.hasSun) {
-            let dayPercentagePassed = (((new Date() - this.location.sunrise) / 1000) / (this.location.dayLength)) * 100;
             this.element.insertAdjacentHTML('afterbegin', '<div class="sun"></div>');
             this.setSunAnimationDuration = this.location.dayLength;
-            this.setSunProgression = dayPercentagePassed;
+            this.setSunProgression = this.location.dayTimeProgression;
         }
         if (this.gradient !== DAYTIME_GRADIENTS.day && this.hasSun) {
             this.element.removeChild(this.element.firstChild);
