@@ -172,8 +172,8 @@ function updateLocalTimes(date) {
         return (i < 10) ? '0' + i : i;
     }
 
-    let hourErlangen = (date.getUTCHours() + 2) % 24;
-    let hourMelbourne = (date.getUTCHours() + 11) % 24;
+    let hourErlangen = (date.getUTCHours() + erlangen.timeZoneOffset) % 24;
+    let hourMelbourne = (date.getUTCHours() + melbourne.timeZoneOffset) % 24;
     let minute = forceTwoDigits(date.getMinutes());
     let second = forceTwoDigits(date.getSeconds());
     document.getElementById('erlangen').innerHTML = `${hourErlangen}:${minute}:${second}`;
