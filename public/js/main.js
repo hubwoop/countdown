@@ -23,6 +23,7 @@ class Location {
         this.whereOnEarthID = whereOnEarthID;
         this.termperature = null;
         this.weather = null;
+        this.fetchDate = null;
     }
 
     get dayTimeProgression() {
@@ -231,9 +232,15 @@ function updateLocalTimes(date) {
 function updateDaytimeBasedVisuals(date) {
     for (const half of halves) {
         const gradient = decideOnGradient(half.location, date);
-        if(half.gradient !== gradient) {
+        if (half.gradient !== gradient) {
             half.DayTime = gradient;
         }
+        // fetch sunrise/sunset on new days
+        const currentDay = date.getDay();
+        if (currentDay > half.location.fetchDate.getDay() || currentDay > half.location.sunset.getDay()) {
+            getSunTimes(half.location);
+        }
+
     }
 }
 
@@ -287,6 +294,7 @@ function getSunTimes(location) {
                 location.twilightBegin = new Date(data.results.civil_twilight_begin);
                 location.twilightEnd = new Date(data.results.civil_twilight_end);
                 location.dayLength = data.results.day_length;
+                location.fetchDate = new Date();
             });
         })
         .catch(function (err) {
