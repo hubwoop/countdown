@@ -121,7 +121,11 @@ body {
     font-size: 9vw;
 }
 
-.locationName:first-letter {
+.locationName {
+    display: inline-block;
+}
+
+p.locationName:first-letter {
     text-transform: capitalize;
 }
 
