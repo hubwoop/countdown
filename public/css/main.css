@@ -121,6 +121,10 @@ body {
     font-size: 9vw;
 }
 
+.locationName:first-letter {
+    text-transform: capitalize;
+}
+
 .half {
     overflow: hidden;
     height: 49vh;
@@ -156,7 +160,7 @@ body {
     height: 50%;
     width: 0;
     /* Permalink - use to edit and share this gradient: http://colorzilla.com/gradient-editor/#d6d6d6+15,d6d6d6+85&0+0,0.8+15,0.8+85,0+100 */
-    background: linear-gradient(to bottom, rgba(214,214,214,0) 0%,rgba(214,214,214,0.8) 40%,rgba(214,214,214,0.8) 60%,rgba(214,214,214,0) 100%);
+    background: linear-gradient(to bottom, rgba(214, 214, 214, 0) 0%, rgba(214, 214, 214, 0.8) 40%, rgba(214, 214, 214, 0.8) 60%, rgba(214, 214, 214, 0) 100%);
     transition: width 1s ease-in-out;
     vertical-align: middle;
 }
@@ -168,13 +172,18 @@ body {
     right: -50%;
     color: white;
 }
+
 /* ==========================================================================
    Sun Animation based on https://jsfiddle.net/w23v50h5/123/
    ========================================================================== */
 
 @keyframes sunArc {
-    from { transform: rotate(-180deg) translateX(40vw) rotate(180deg); }
-    to   { transform: rotate(0deg) translateX(40vw) rotate(0deg); }
+    from {
+        transform: rotate(-180deg) translateX(40vw) rotate(180deg);
+    }
+    to {
+        transform: rotate(0deg) translateX(40vw) rotate(0deg);
+    }
 }
 
 .sun {
@@ -200,29 +209,29 @@ body {
 }
 
 .cloud {
-	width: 200px;
+    width: 200px;
     height: 60px;
-	background: #fff;
-	border-radius: 200px;
-	position: relative;
+    background: #fff;
+    border-radius: 200px;
+    position: relative;
 }
 
 .cloud:before, .cloud:after {
-	content: '';
-	position: absolute;
-	background: #fff;
-	width: 100px;
+    content: '';
+    position: absolute;
+    background: #fff;
+    width: 100px;
     height: 80px;
     top: -15px;
     left: 10px;
-	border-radius: 100px;
-	transform: rotate(30deg);
+    border-radius: 100px;
+    transform: rotate(30deg);
 }
 
 .cloud:after {
-	width: 120px;
+    width: 120px;
     height: 120px;
-	top: -55px;
+    top: -55px;
     left: auto;
     right: 15px;
 }
@@ -230,7 +239,7 @@ body {
 .x1 {
     --factor: 1;
     position: inherit;
-	animation: moveClouds calc(var(--factor) * var(--base-cloud-speed)) linear infinite;
+    animation: moveClouds calc(var(--factor) * var(--base-cloud-speed)) linear infinite;
     left: 0;
     top: 10%;
 }
@@ -276,10 +285,13 @@ body {
 }
 
 @keyframes moveClouds {
-	0% { left: 140%; }
-	100% { left: -40%; }
+    0% {
+        left: 140%;
+    }
+    100% {
+        left: -40%;
+    }
 }
-
 
 /* ==========================================================================
    Print styles.
@@ -292,8 +304,9 @@ body {
     *:before,
     *:after {
         background: transparent !important;
-        color: #000 !important; /* Black prints faster:
-                                   http://www.sanbeiji.com/archives/953 */
+        color: #000 !important;
+        /* Black prints faster:
+                                          http://www.sanbeiji.com/archives/953 */
         box-shadow: none !important;
         text-shadow: none !important;
     }
@@ -315,7 +328,6 @@ body {
      * Don't show links that are fragment identifiers,
      * or use the `javascript:` pseudo protocol
      */
-
     a[href^="#"]:after,
     a[href^="javascript:"]:after {
         content: "";
@@ -324,6 +336,7 @@ body {
     pre {
         white-space: pre-wrap !important;
     }
+
     pre,
     blockquote {
         border: 1px solid #999;
@@ -334,7 +347,6 @@ body {
      * Printing Tables:
      * http://css-discuss.incutio.com/wiki/Printing_Tables
      */
-
     thead {
         display: table-header-group;
     }

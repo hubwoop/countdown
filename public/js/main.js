@@ -8,6 +8,7 @@
 class Location {
 
     constructor(city, latitude, longitude, timeZoneOffset, whereOnEarthID) {
+        this.currentTime = null;
         this.sunset = 0;
         this.sunrise = 0;
         this.twilightBegin = 0;
@@ -27,6 +28,7 @@ class Location {
     get dayTimeProgression() {
         return (((new Date() - this.sunrise) / 1000) / (this.dayLength)) * 100;
     }
+
 }
 
 class Gradient {
@@ -72,6 +74,7 @@ class Half {
         this.id = id;
         this.element = document.getElementById(id);
         this.gradient = null;
+        document.getElementById(`${this.id}Location`).textContent = location.city;
     }
 
     hasChildElementWithClass(css_class) {
@@ -113,6 +116,11 @@ class Half {
         } else {
             throw `There is no sun on ${this.location.city}-half...`;
         }
+    }
+
+    updateTimeDisplay() {
+        document.getElementById(`${this.id}Countdown`).textContent =
+            `${this.location.currentTime.hour}:${this.location.currentTime.minute}:${this.location.currentTime.second}`;
     }
 
     toggleNightMode() {
@@ -159,6 +167,28 @@ let halves = new Halves(
 
 /* Functions */
 
+window.onload = function () {
+    console.log("Available commands:\nhalt() stops periodic updates.\nresume() enables periodic updates.");
+    for (const half of halves) {
+        getSunTimes(half.location);
+    }
+    ticker = runTicker();
+};
+
+function runTicker() {
+
+    ticker = setInterval(function () {
+
+        let date = new Date();
+        updateCountdown(date);
+        updateLocalTimes(date);
+        updateDaytimeBasedVisuals(date);
+
+    }, 1000);
+    halted = false;
+    return ticker;
+}
+
 function updateCountdown(date) {
 
     const now = date.getTime();
@@ -186,16 +216,31 @@ function updateLocalTimes(date) {
         return (i < 10) ? '0' + i : i;
     }
 
-    let hourErlangen = (date.getUTCHours() + erlangen.timeZoneOffset) % 24;
-    let hourMelbourne = (date.getUTCHours() + melbourne.timeZoneOffset) % 24;
     let minute = forceTwoDigits(date.getMinutes());
     let second = forceTwoDigits(date.getSeconds());
-    document.getElementById('erlangen').innerHTML = `${hourErlangen}:${minute}:${second}`;
-    document.getElementById('melbourne').innerHTML = `${hourMelbourne}:${minute}:${second}`;
+    for (const half of halves) {
+        half.location.currentTime = {
+            hour: (date.getUTCHours() + half.location.timeZoneOffset) % 24,
+            minute: minute,
+            second: second
+        };
+        half.updateTimeDisplay()
+    }
+}
+
+function updateDaytimeBasedVisuals(date) {
+    for (const half of halves) {
+        const gradient = decideOnGradient(half.location, date);
+        if(half.gradient !== gradient) {
+            half.DayTime = gradient;
+        }
+    }
 }
 
 function decideOnGradient(location, date) {
+
     // console.log(`${date} >= ${location.sunrise} && ${date} <= ${location.sunset}`);
+
     if (date >= location.twilightBegin && date <= location.twilightEnd) {
         if (date <= location.sunrise) {
             return DAYTIME_GRADIENTS.dawn;
@@ -210,6 +255,7 @@ function decideOnGradient(location, date) {
 }
 
 function getSunTimes(location) {
+
     // Melbourne https://api.sunrise-sunset.org/json?lat=-37.814&lng=-144.96332
     // Erlangen https://api.sunrise-sunset.org/json?lat=49.59099&lng=11.00783
 
@@ -248,34 +294,6 @@ function getSunTimes(location) {
         });
 
 }
-
-function updateDaytimeBasedVisuals(date) {
-    for (const half of halves) {
-        half.DayTime = decideOnGradient(half.location, date);
-    }
-}
-
-function runTicker() {
-
-    ticker = setInterval(function () {
-
-        let date = new Date();
-        updateCountdown(date);
-        updateLocalTimes(date);
-        updateDaytimeBasedVisuals(date);
-
-    }, 1000);
-    halted = false;
-    return ticker;
-}
-
-window.onload = function () {
-    console.log("Available commands:\nhalt() stops periodic updates.\nresume() enables periodic updates.");
-    for (const half of halves) {
-        getSunTimes(half.location);
-    }
-    ticker = runTicker();
-};
 
 function generateCloudHTML() {
     let cloudHTML = '<div id="clouds">';
