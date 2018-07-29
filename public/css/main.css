@@ -107,6 +107,10 @@ body {
     width: 100%;
 }
 
+.background {
+    overflow: hidden;
+}
+
 .clockContainer {
     font-size: 5vw;
     display: grid;
