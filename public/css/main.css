@@ -92,10 +92,10 @@ textarea {
    ========================================================================== */
 
 body {
-    --melbourne-top-color: black;
-    --melbourne-bottom-color: black;
-    --erlangen-top-color: black;
-    --erlangen-bottom-color: black;
+    --bottom-half-top-color: black;
+    --bottom-half-bottom-color: black;
+    --top-half-top-color: black;
+    --top-half-bottom-color: black;
     --sun-size: 8vw;
     --base-cloud-speed: 25s;
 }
@@ -139,11 +139,11 @@ p.locationName:first-letter {
 }
 
 #lowerHalf {
-    background: linear-gradient(to top, var(--melbourne-bottom-color), var(--melbourne-top-color));
+    background: linear-gradient(to top, var(--bottom-half-bottom-color), var(--bottom-half-top-color));
 }
 
 #upperHalf {
-    background: linear-gradient(to top, var(--erlangen-bottom-color), var(--erlangen-top-color));
+    background: linear-gradient(to top, var(--top-half-bottom-color), var(--top-half-top-color));
     position: relative;
 }
 

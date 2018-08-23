@@ -92,8 +92,13 @@ class Half {
 
     // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/set
     set DayTime(gradient) {
-        document.body.style.setProperty(`--${this.location.city}-top-color`, gradient.top);
-        document.body.style.setProperty(`--${this.location.city}-bottom-color`, gradient.bottom);
+        if(halves.upper.location.city === this.location.city) {
+            document.body.style.setProperty(`--top-half-top-color`, gradient.top);
+            document.body.style.setProperty(`--top-half-bottom-color`, gradient.bottom);
+        } else {
+            document.body.style.setProperty(`--bottom-half-top-color`, gradient.top);
+            document.body.style.setProperty(`--bottom-half-bottom-color`, gradient.bottom);
+        }
         this.gradient = gradient;
         this.toggleNightMode();
         this.toggleDayMode();
@@ -147,7 +152,7 @@ class Half {
 
 /* Globals */
 
-const countdownDate = new Date(Date.UTC(2018, 7, 2, 19, 35)).getTime();
+const countdownDate = new Date(Date.UTC(2018, 7, 29, 18, 0)).getTime();
 const totalDistance = countdownDate - new Date(Date.UTC(2018, 1, 10, 9, 30, 0)).getTime();
 const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
@@ -159,11 +164,12 @@ const cloudHTML = generateCloudHTML();
 
 let ticker;
 let halted = false;
-let melbourne = new Location('melbourne', -37.814, 144.96332, 10, 1103816);
+//let melbourne = new Location('melbourne', -37.814, 144.96332, 10, 1103816);
+let samui = new Location('samui', 9.560653, 100.003414, 7, 1225442);
 let erlangen = new Location('erlangen', 49.59099, 11.00783, 2, 680564);
 let halves = new Halves(
     new Half(erlangen, 'upperHalf'),
-    new Half(melbourne, 'lowerHalf')
+    new Half(samui, 'lowerHalf')
 );
 
 /* Functions */
