@@ -99,7 +99,7 @@ class Halves {
             half.updateGradient(date);
             // fetch sunrise/sunset on new days
             const currentDay = date.getDay();
-            if (!half.location.fetchDate || currentDay > half.location.fetchDate.getDay() || currentDay > half.location.sunset.getDay()) {
+            if (currentDay > half.location.fetchDate.getDay() || currentDay > half.location.sunset.getDay()) {
                 half.location.updateSunTimes();
             }
         }
