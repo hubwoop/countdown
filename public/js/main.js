@@ -32,6 +32,7 @@ class Location {
 
     updateSunTimes() {
         const relativeFetchDate = this.decideOnFetchDate();
+        let that = this;
         console.log(`fetching: https://api.sunrise-sunset.org/json?lat=${this.latitude}&lng=${this.longitude}&formatted=0&date=${relativeFetchDate}`);
         fetch(`https://api.sunrise-sunset.org/json?lat=${this.latitude}&lng=${this.longitude}&formatted=0&date=${relativeFetchDate}`)
             .then(function (response) {
@@ -39,16 +40,15 @@ class Location {
                     console.log('Looks like there was a problem. Status Code: ' + response.status);
                     return;
                 }
-
                 response.json().then(function (data) {
-                    this.sunrise = new Date(data.results.sunrise);
-                    this.sunset = new Date(data.results.sunset);
-                    this.twilightBegin = new Date(data.results.civil_twilight_begin);
-                    this.twilightEnd = new Date(data.results.civil_twilight_end);
-                    this.dayLength = data.results.day_length;
-                    this.fetchDate = new Date();
-                }.bind(this));
-            }.bind(this))
+                    that.sunrise = new Date(data.results.sunrise);
+                    that.sunset = new Date(data.results.sunset);
+                    that.twilightBegin = new Date(data.results.civil_twilight_begin);
+                    that.twilightEnd = new Date(data.results.civil_twilight_end);
+                    that.dayLength = data.results.day_length;
+                    that.fetchDate = new Date();
+                });
+            })
             .catch(function (err) {
                 console.log('Fetch Error :-S', err);
             })
