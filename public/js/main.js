@@ -1,8 +1,3 @@
-// Melbourne
-// https://api.sunrise-sunset.org/json?lat=-37.814&lng=-144.96332
-// Erlangen
-// https://api.sunrise-sunset.org/json?lat=49.59099&lng=11.00783
-
 /* Object definitions */
 
 class Location {
@@ -18,8 +13,6 @@ class Location {
         this.longitude = longitude;
         this.timeZoneOffset = timeZoneOffset;
         this.dayLength = 0;
-        // Nürnberg https://www.metaweather.com/api/location/680564/
-        // Melbourne https://www.metaweather.com/api/location/1103816/
         this.whereOnEarthID = whereOnEarthID;
         this.termperature = null;
         this.weather = null;
@@ -110,6 +103,23 @@ class Halves {
                 half.location.updateSunTimes();
             }
         }
+    }
+
+    updateLocalTimes(date) {
+        let minute = Halves.forceTwoDigits(date.getMinutes());
+        let second = Halves.forceTwoDigits(date.getSeconds());
+        for (const half of this) {
+            half.location.currentTime = {
+                hour: (date.getUTCHours() + half.location.timeZoneOffset) % 24,
+                minute: minute,
+                second: second
+            };
+            half.updateTimeDisplay()
+        }
+    }
+
+    static forceTwoDigits(i) {
+        return (i < 10) ? '0' + i : i;
     }
 }
 
@@ -228,9 +238,8 @@ const DAYTIME_GRADIENTS = {
 };
 const cloudHTML = generateCloudHTML();
 
-let ticker;
+let heartbeat;
 let halted = false;
-//let melbourne = new Location('melbourne', -37.814, 144.96332, 10, 1103816);
 let samui = new Location('samui', 9.560653, 100.003414, 7, 1225442);
 let erlangen = new Location('erlangen', 49.59099, 11.00783, 2, 680564);
 let halves = new Halves(
@@ -245,21 +254,21 @@ window.onload = function () {
     for (const half of halves) {
         half.location.updateSunTimes();
     }
-    ticker = runTicker();
+    heartbeat = startHeartbeat();
 };
 
-function runTicker() {
+function startHeartbeat() {
 
-    ticker = setInterval(function () {
+    heartbeat = setInterval(function () {
 
         let date = new Date();
         updateCountdown(date);
-        updateLocalTimes(date);
+        halves.updateLocalTimes(date);
         halves.updateDaytimeBasedVisuals(date);
 
     }, 1000);
     halted = false;
-    return ticker;
+    return heartbeat;
 }
 
 function updateCountdown(date) {
@@ -275,72 +284,12 @@ function updateCountdown(date) {
 
     if (distance <= 0) {
         // Countdown over.
-        clearInterval(ticker);
+        clearInterval(heartbeat);
         countdownText = '<div class="alert alert-success" role="alert">yaaay :D!</div>';
         progress = 100
     }
     document.getElementById('progress').style.width = `${progress}%`;
     document.getElementById('countdown').innerHTML = countdownText;
-}
-
-function updateLocalTimes(date) {
-
-    function forceTwoDigits(i) {
-        return (i < 10) ? '0' + i : i;
-    }
-
-    let minute = forceTwoDigits(date.getMinutes());
-    let second = forceTwoDigits(date.getSeconds());
-    for (const half of halves) {
-        half.location.currentTime = {
-            hour: (date.getUTCHours() + half.location.timeZoneOffset) % 24,
-            minute: minute,
-            second: second
-        };
-        half.updateTimeDisplay()
-    }
-}
-
-function getSunTimes(location) {
-
-    // Melbourne https://api.sunrise-sunset.org/json?lat=-37.814&lng=-144.96332
-    // Erlangen https://api.sunrise-sunset.org/json?lat=49.59099&lng=11.00783
-
-    function decideOnFetchDate() {
-        let localDate = new Date();
-        if ((localDate.getUTCHours() + location.timeZoneOffset) >= 24) {
-            return 'tomorrow';
-        } else if ((localDate.getUTCHours() + location.timeZoneOffset) < 0) {
-            return 'yesterday';
-        } else {
-            return 'today';
-        }
-    }
-
-    let fetchDate = decideOnFetchDate();
-
-    console.log(`fetching: https://api.sunrise-sunset.org/json?lat=${location.latitude}&lng=${location.longitude}&formatted=0&date=${fetchDate}`);
-
-    fetch(`https://api.sunrise-sunset.org/json?lat=${location.latitude}&lng=${location.longitude}&formatted=0&date=${fetchDate}`)
-        .then(function (response) {
-            if (response.status !== 200) {
-                console.log('Looks like there was a problem. Status Code: ' + response.status);
-                return;
-            }
-
-            response.json().then(function (data) {
-                location.sunrise = new Date(data.results.sunrise);
-                location.sunset = new Date(data.results.sunset);
-                location.twilightBegin = new Date(data.results.civil_twilight_begin);
-                location.twilightEnd = new Date(data.results.civil_twilight_end);
-                location.dayLength = data.results.day_length;
-                location.fetchDate = new Date();
-            });
-        })
-        .catch(function (err) {
-            console.log('Fetch Error :-S', err);
-        });
-
 }
 
 function generateCloudHTML() {
@@ -354,7 +303,7 @@ function generateCloudHTML() {
 
 function halt() {
     if (!halted) {
-        clearInterval(ticker);
+        clearInterval(heartbeat);
         halted = true;
     } else {
         console.log("Already HALTED...")
@@ -365,7 +314,7 @@ function resume() {
     if (!halted) {
         console.log("Already RUNNING...")
     } else {
-        ticker = runTicker();
+        heartbeat = startHeartbeat();
     }
 
 }
