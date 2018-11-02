@@ -103,11 +103,6 @@ class Halves {
     updateDaytimeBasedVisuals(date) {
         for (const half of this) {
             half.updateGradient(date);
-            // fetch sunrise/sunset on new days
-            const currentDay = date.getDay();
-            if (currentDay > half.location.fetchDate.getDay() || currentDay > half.location.sunset.getDay()) {
-                half.location.updateSunTimes();
-            }
         }
     }
 
@@ -120,7 +115,12 @@ class Halves {
                 minute: minute,
                 second: second
             };
-            half.updateTimeDisplay()
+            if(half.location.currentTime.hour === 0
+                && half.location.currentTime.minute === 0
+                && half.location.currentTime.second < 5 ) {
+                half.location.updateSunTimes();
+            }
+
         }
     }
 
@@ -136,6 +136,7 @@ class Half {
         this.id = id;
         this.element = document.getElementById(id);
         this.gradient = null;
+        this.updateTimes = false;
         document.getElementById(`${this.id}Location`).textContent = location.city;
     }
 
@@ -233,24 +234,25 @@ class Half {
 }
 
 /* Globals */
-
-const countdownDate = new Date(Date.UTC(2018, 13, 29, 18, 0)).getTime();
-const totalDistance = countdownDate - new Date(Date.UTC(2018, 1, 10, 9, 30, 0)).getTime();
+const startTime = new Date(Date.UTC(2017, 13, 12, 12, 0)).getTime();
+const endTime = new Date(Date.UTC(2018, 13, 12, 12, 0)).getTime();
+const totalDistance = endTime - startTime;
 const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
     dusk: new Gradient('#485661', '#ff822b'),
     night: new Gradient('#0a1722', '#415a84'),
     day: new Gradient('#86d4f7', '#55a7ff')
 };
-const cloudHTML = generateCloudHTML();
 
 let heartbeat;
 let halted = false;
-let samui = new Location('samui', 9.560653, 100.003414, 7, 1225442);
-let erlangen = new Location('erlangen', 49.59099, 11.00783, 2, 680564);
+// for woeid goto https://developer.yahoo.com/weather/ and use the sample api:
+// select woeid from geo.places(1) where text="north pole"
+let nordpol = new Location('nordpol', 80, 10, 0, 2461487);
+let erlangen = new Location('erlangen', 49.59099, 11.00783, 1, 680564);
 let halves = new Halves(
     new Half(erlangen, 'upperHalf'),
-    new Half(samui, 'lowerHalf')
+    new Half(nordpol, 'lowerHalf')
 );
 
 /* Functions */
@@ -280,7 +282,7 @@ function startHeartbeat() {
 function updateCountdown(date) {
 
     const now = date.getTime();
-    const distance = countdownDate - now;
+    const distance = endTime - now;
     let progress = ((totalDistance - distance) / totalDistance) * 100;
     const days = Math.floor(distance / (1000 * 60 * 60 * 24));
     const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
