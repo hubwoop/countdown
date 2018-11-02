@@ -30,6 +30,40 @@ class Location {
         return (((new Date() - this.sunrise) / 1000) / (this.dayLength)) * 100;
     }
 
+    updateSunTimes() {
+        const relativeFetchDate = this.decideOnFetchDate();
+        console.log(`fetching: https://api.sunrise-sunset.org/json?lat=${this.latitude}&lng=${this.longitude}&formatted=0&date=${relativeFetchDate}`);
+        fetch(`https://api.sunrise-sunset.org/json?lat=${this.latitude}&lng=${this.longitude}&formatted=0&date=${relativeFetchDate}`)
+            .then(function (response) {
+                if (response.status !== 200) {
+                    console.log('Looks like there was a problem. Status Code: ' + response.status);
+                    return;
+                }
+
+                response.json().then(function (data) {
+                    this.sunrise = new Date(data.results.sunrise);
+                    this.sunset = new Date(data.results.sunset);
+                    this.twilightBegin = new Date(data.results.civil_twilight_begin);
+                    this.twilightEnd = new Date(data.results.civil_twilight_end);
+                    this.dayLength = data.results.day_length;
+                    this.fetchDate = new Date();
+                }.bind(this));
+            }.bind(this))
+            .catch(function (err) {
+                console.log('Fetch Error :-S', err);
+            })
+    }
+
+    decideOnFetchDate() {
+        let localDate = new Date();
+        if ((localDate.getUTCHours() + this.timeZoneOffset) >= 24) {
+            return 'tomorrow';
+        } else if ((localDate.getUTCHours() + this.timeZoneOffset) < 0) {
+            return 'yesterday';
+        } else {
+            return 'today';
+        }
+    }
 }
 
 class Gradient {
@@ -72,8 +106,8 @@ class Halves {
             half.updateGradient(date);
             // fetch sunrise/sunset on new days
             const currentDay = date.getDay();
-            if (currentDay > half.location.fetchDate.getDay() || currentDay > half.location.sunset.getDay()) {
-                getSunTimes(half.location);
+            if (!half.location.fetchDate || currentDay > half.location.fetchDate.getDay() || currentDay > half.location.sunset.getDay()) {
+                half.location.updateSunTimes();
             }
         }
     }
@@ -209,7 +243,7 @@ let halves = new Halves(
 window.onload = function () {
     console.log("Available commands:\nhalt() stops periodic updates.\nresume() enables periodic updates.");
     for (const half of halves) {
-        getSunTimes(half.location);
+        half.location.updateSunTimes();
     }
     ticker = runTicker();
 };
