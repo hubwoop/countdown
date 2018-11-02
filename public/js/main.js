@@ -17,6 +17,7 @@ class Location {
         this.termperature = null;
         this.weather = null;
         this.fetchDate = null;
+        this.suntimeAPI = 'https://api.sunrise-sunset.org/json';
     }
 
     get dayTimeProgression() {
@@ -26,8 +27,13 @@ class Location {
     updateSunTimes() {
         const relativeFetchDate = this.decideOnFetchDate();
         let that = this;
-        console.log(`fetching: https://api.sunrise-sunset.org/json?lat=${this.latitude}&lng=${this.longitude}&formatted=0&date=${relativeFetchDate}`);
-        fetch(`https://api.sunrise-sunset.org/json?lat=${this.latitude}&lng=${this.longitude}&formatted=0&date=${relativeFetchDate}`)
+        console.log(`fetching: ${this.suntimeAPI}
+        ?lat=${this.latitude}
+        &lng=${this.longitude}
+        &formatted=0
+        &date=${relativeFetchDate}`
+        );
+        fetch(`${this.suntimeAPI}?lat=${this.latitude}&lng=${this.longitude}&formatted=0&date=${relativeFetchDate}`)
             .then(function (response) {
                 if (response.status !== 200) {
                     console.log('Looks like there was a problem. Status Code: ' + response.status);
