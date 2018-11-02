@@ -66,6 +66,17 @@ class Halves {
             }
         }
     };
+
+    updateDaytimeBasedVisuals(date) {
+        for (const half of this) {
+            half.updateGradient(date);
+            // fetch sunrise/sunset on new days
+            const currentDay = date.getDay();
+            if (currentDay > half.location.fetchDate.getDay() || currentDay > half.location.sunset.getDay()) {
+                getSunTimes(half.location);
+            }
+        }
+    }
 }
 
 class Half {
@@ -148,11 +159,32 @@ class Half {
             this.element.removeChild(this.element.firstChild);
         }
     }
+
+    updateGradient(date) {
+        const gradient = this.decideOnGradient(date);
+        if (this.gradient !== gradient) {
+            this.DayTime = gradient;
+        }
+    }
+
+    decideOnGradient(date) {
+        if (date >= this.location.twilightBegin && date <= this.location.twilightEnd) {
+            if (date <= this.location.sunrise) {
+                return DAYTIME_GRADIENTS.dawn;
+            } else if (date <= this.location.sunset) {
+                return DAYTIME_GRADIENTS.day;
+            } else {
+                return DAYTIME_GRADIENTS.dusk;
+            }
+        } else {
+            return DAYTIME_GRADIENTS.night;
+        }
+    }
 }
 
 /* Globals */
 
-const countdownDate = new Date(Date.UTC(2018, 7, 29, 18, 0)).getTime();
+const countdownDate = new Date(Date.UTC(2018, 13, 29, 18, 0)).getTime();
 const totalDistance = countdownDate - new Date(Date.UTC(2018, 1, 10, 9, 30, 0)).getTime();
 const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
@@ -189,7 +221,7 @@ function runTicker() {
         let date = new Date();
         updateCountdown(date);
         updateLocalTimes(date);
-        updateDaytimeBasedVisuals(date);
+        halves.updateDaytimeBasedVisuals(date);
 
     }, 1000);
     halted = false;
@@ -232,38 +264,6 @@ function updateLocalTimes(date) {
             second: second
         };
         half.updateTimeDisplay()
-    }
-}
-
-function updateDaytimeBasedVisuals(date) {
-    for (const half of halves) {
-        const gradient = decideOnGradient(half.location, date);
-        if (half.gradient !== gradient) {
-            half.DayTime = gradient;
-        }
-        // fetch sunrise/sunset on new days
-        const currentDay = date.getDay();
-        if (currentDay > half.location.fetchDate.getDay() || currentDay > half.location.sunset.getDay()) {
-            getSunTimes(half.location);
-        }
-
-    }
-}
-
-function decideOnGradient(location, date) {
-
-    // console.log(`${date} >= ${location.sunrise} && ${date} <= ${location.sunset}`);
-
-    if (date >= location.twilightBegin && date <= location.twilightEnd) {
-        if (date <= location.sunrise) {
-            return DAYTIME_GRADIENTS.dawn;
-        } else if (date <= location.sunset) {
-            return DAYTIME_GRADIENTS.day;
-        } else {
-            return DAYTIME_GRADIENTS.dusk;
-        }
-    } else {
-        return DAYTIME_GRADIENTS.night;
     }
 }
 
