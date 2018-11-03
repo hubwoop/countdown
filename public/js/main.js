@@ -1,14 +1,43 @@
 /* Object definitions */
 class SunTimeAPI {
-    constructor(endpoint) {
-        this.endoint = endpoint;
+    constructor() {
+        this.endoint = 'https://api.sunrise-sunset.org/json';
+        this.fetching = false;
     }
 
+    updateSunTimes(location, relativeFetchDate) {
+        let promise = this.startFetch(location, relativeFetchDate);
+        this.processFetchResult(promise, location)
+    }
+
+    processFetchResult(promise, location) {
+        let that = this;
+        promise.then((response) => {
+            if (response.status !== 200) {
+                console.log('Looks like there was a problem. Status Code: ' + response.status);
+                throw response.status;
+            }
+            response.json().then(location.receiveSunTimes.bind(location))
+        })
+        .catch((err) => { console.log('Fetch Error :-S', err); })
+        .finally(() => { that.fetching = false });
+    }
+
+    startFetch(location, relativeFetchDate) {
+        console.log(`fetching: ${this.endoint}
+        ?lat=${location.latitude}
+        &lng=${location.longitude}
+        &formatted=0
+        &date=${relativeFetchDate}`
+        );
+        this.fetching = true;
+        return fetch(`${this.endoint}?lat=${location.latitude}&lng=${location.longitude}&formatted=0&date=${relativeFetchDate}`)
+    }
 }
 
 class Location {
 
-    constructor(city, latitude, longitude, timeZoneOffset, whereOnEarthID) {
+    constructor(city, latitude, longitude, timeZoneOffset) {
         this.currentTime = null;
         this.sunset = 0;
         this.sunrise = 0;
@@ -19,10 +48,7 @@ class Location {
         this.longitude = longitude;
         this.timeZoneOffset = timeZoneOffset;
         this.dayLength = 0;
-        this.whereOnEarthID = whereOnEarthID;
-        this.termperature = null;
-        this.weather = null;
-        this.suntimeAPI = 'https://api.sunrise-sunset.org/json';
+        this.suntimeAPI = new SunTimeAPI();
     }
 
     get dayTimeProgression() {
@@ -33,10 +59,7 @@ class Location {
         let minute = Location.forceTwoDigits(date.getMinutes());
         let second = Location.forceTwoDigits(date.getSeconds());
 
-        if(!this.currentTime
-            || (this.currentTime.hour === 0
-                && this.currentTime.minute === 0
-                && this.currentTime.second < 5)) {
+        if(!this.currentTime || (this.inFirstSecondsOfNewDay() && !this.suntimeAPI.fetching)) {
             this.updateSunTimes();
         }
 
@@ -47,36 +70,19 @@ class Location {
         };
     }
 
+    inFirstSecondsOfNewDay() {
+        return this.currentTime.hour === 0
+            && this.currentTime.minute === 0
+            && this.currentTime.second < 5;
+    }
+
     static forceTwoDigits(i) {
         return (i < 10) ? '0' + i : i;
     }
 
     updateSunTimes() {
         const relativeFetchDate = this.decideOnFetchDate();
-        let that = this;
-        console.log(`fetching: ${this.suntimeAPI}
-        ?lat=${this.latitude}
-        &lng=${this.longitude}
-        &formatted=0
-        &date=${relativeFetchDate}`
-        );
-        fetch(`${this.suntimeAPI}?lat=${this.latitude}&lng=${this.longitude}&formatted=0&date=${relativeFetchDate}`)
-            .then(function (response) {
-                if (response.status !== 200) {
-                    console.log('Looks like there was a problem. Status Code: ' + response.status);
-                    return;
-                }
-                response.json().then(function (data) {
-                    that.sunrise = new Date(data.results.sunrise);
-                    that.sunset = new Date(data.results.sunset);
-                    that.twilightBegin = new Date(data.results.civil_twilight_begin);
-                    that.twilightEnd = new Date(data.results.civil_twilight_end);
-                    that.dayLength = data.results.day_length;
-                });
-            })
-            .catch(function (err) {
-                console.log('Fetch Error :-S', err);
-            })
+        this.suntimeAPI.updateSunTimes(this, relativeFetchDate)
     }
 
     decideOnFetchDate() {
@@ -88,6 +94,15 @@ class Location {
         } else {
             return 'today';
         }
+    }
+
+    receiveSunTimes(data) {
+        const sunTimes = data.results;
+        this.sunrise = new Date(sunTimes['sunrise']);
+        this.sunset = new Date(sunTimes['sunset']);
+        this.twilightBegin = new Date(sunTimes['civil_twilight_begin']);
+        this.twilightEnd = new Date(sunTimes['civil_twilight_end']);
+        this.dayLength = sunTimes['day_length'];
     }
 }
 
@@ -295,8 +310,8 @@ let heartbeat;
 let halted = false;
 // for woeid goto https://developer.yahoo.com/weather/ and use the sample api:
 // select woeid from geo.places(1) where text="north pole"
-let nordpol = new Location('nordpol', 80, 10, 0, 2461487);
-let erlangen = new Location('erlangen', 49.59099, 11.00783, 1, 680564);
+let nordpol = new Location('nordpol', 80, 10, 0);
+let erlangen = new Location('erlangen', 49.59099, 11.00783, 1);
 let halves = new Halves(
     new Half(erlangen, 'upperHalf'),
     new Half(nordpol, 'lowerHalf')

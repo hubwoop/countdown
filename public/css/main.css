@@ -174,7 +174,7 @@ p.locationName:first-letter {
 }
 
 #progress::after {
-    content: '\2708'; /* ✈ */
+    content: '\1F385'; /* 🎅 */
     font-size: 4vh;
     position: relative;
     right: -50%;
