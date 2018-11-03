@@ -16,7 +16,6 @@ class Location {
         this.whereOnEarthID = whereOnEarthID;
         this.termperature = null;
         this.weather = null;
-        this.fetchDate = null;
         this.suntimeAPI = 'https://api.sunrise-sunset.org/json';
     }
 
@@ -67,7 +66,6 @@ class Location {
                     that.twilightBegin = new Date(data.results.civil_twilight_begin);
                     that.twilightEnd = new Date(data.results.civil_twilight_end);
                     that.dayLength = data.results.day_length;
-                    that.fetchDate = new Date();
                 });
             })
             .catch(function (err) {
@@ -312,6 +310,7 @@ function generateCloudHTML() {
     return cloudHTML;
 }
 
+// noinspection JSUnusedGlobalSymbols
 function halt() {
     if (!halted) {
         clearInterval(heartbeat);
@@ -321,6 +320,7 @@ function halt() {
     }
 }
 
+// noinspection JSUnusedGlobalSymbols
 function resume() {
     if (!halted) {
         console.log("Already RUNNING...")
