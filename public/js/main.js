@@ -24,6 +24,28 @@ class Location {
         return (((new Date() - this.sunrise) / 1000) / (this.dayLength)) * 100;
     }
 
+    set time(date) {
+        let minute = Location.forceTwoDigits(date.getMinutes());
+        let second = Location.forceTwoDigits(date.getSeconds());
+
+        if(!this.currentTime
+            || (this.currentTime.hour === 0
+                && this.currentTime.minute === 0
+                && this.currentTime.second < 5)) {
+            this.updateSunTimes();
+        }
+
+        this.currentTime = {
+            hour: (date.getUTCHours() + this.timeZoneOffset) % 24,
+            minute: minute,
+            second: second
+        };
+    }
+
+    static forceTwoDigits(i) {
+        return (i < 10) ? '0' + i : i;
+    }
+
     updateSunTimes() {
         const relativeFetchDate = this.decideOnFetchDate();
         let that = this;
@@ -107,25 +129,10 @@ class Halves {
     }
 
     updateLocalTimes(date) {
-        let minute = Halves.forceTwoDigits(date.getMinutes());
-        let second = Halves.forceTwoDigits(date.getSeconds());
         for (const half of this) {
-            half.location.currentTime = {
-                hour: (date.getUTCHours() + half.location.timeZoneOffset) % 24,
-                minute: minute,
-                second: second
-            };
-            if(half.location.currentTime.hour === 0
-                && half.location.currentTime.minute === 0
-                && half.location.currentTime.second < 5 ) {
-                half.location.updateSunTimes();
-            }
-
+            half.location.time = date;
+            half.updateTimeDisplay()
         }
-    }
-
-    static forceTwoDigits(i) {
-        return (i < 10) ? '0' + i : i;
     }
 }
 
@@ -136,7 +143,6 @@ class Half {
         this.id = id;
         this.element = document.getElementById(id);
         this.gradient = null;
-        this.updateTimes = false;
         document.getElementById(`${this.id}Location`).textContent = location.city;
     }
 
@@ -259,9 +265,6 @@ let halves = new Halves(
 
 window.onload = function () {
     console.log("Available commands:\nhalt() stops periodic updates.\nresume() enables periodic updates.");
-    for (const half of halves) {
-        half.location.updateSunTimes();
-    }
     heartbeat = startHeartbeat();
 };
 
