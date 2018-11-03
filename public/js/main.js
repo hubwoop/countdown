@@ -1,4 +1,10 @@
 /* Object definitions */
+class SunTimeAPI {
+    constructor(endpoint) {
+        this.endoint = endpoint;
+    }
+
+}
 
 class Location {
 
@@ -237,10 +243,47 @@ class Half {
     }
 }
 
+class Countdown {
+    constructor(startDate, endDate) {
+        this.startTimeStamp = startDate.getTime();
+        this.endTimeStamp = endDate.getTime();
+        this.totalDistance = this.endTimeStamp - this.startTimeStamp;
+        this.progresBar = document.getElementById('progress');
+        this.countdownDisplay = document.getElementById('countdown');
+    }
+
+    update(date) {
+        const now = date.getTime();
+        const distance = this.endTimeStamp - now;
+        let countdownText;
+        let progress = 0;
+        if (distance <= 0) {
+            // Countdown over.
+            clearInterval(heartbeat);
+            countdownText = '<div class="alert alert-success" role="alert">yaaay :D!</div>';
+            progress = 100
+        } else {
+            progress = ((this.totalDistance - distance) / this.totalDistance) * 100;
+            const {days, hours, minutes, seconds} = Countdown.calculateTimeParts(distance);
+            countdownText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+        this.progresBar.style.width = `${progress}%`;
+        this.countdownDisplay.innerHTML = countdownText;
+    }
+
+    static calculateTimeParts(distance) {
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        return {days, hours, minutes, seconds};
+    }
+}
+
 /* Globals */
-const startTime = new Date(Date.UTC(2017, 13, 12, 12, 0)).getTime();
-const endTime = new Date(Date.UTC(2018, 13, 12, 12, 0)).getTime();
-const totalDistance = endTime - startTime;
+const startDate = new Date(Date.UTC(2017, 13, 12, 12, 0));
+const endDate = new Date(Date.UTC(2018, 13, 12, 12, 0));
+let countdown = new Countdown(startDate, endDate);
 const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
     dusk: new Gradient('#485661', '#ff822b'),
@@ -271,43 +314,13 @@ function startHeartbeat() {
     heartbeat = setInterval(function () {
 
         let date = new Date();
-        updateCountdown(date);
+        countdown.update(date);
         halves.updateLocalTimes(date);
         halves.updateDaytimeBasedVisuals(date);
 
     }, 1000);
     halted = false;
     return heartbeat;
-}
-
-function updateCountdown(date) {
-
-    const now = date.getTime();
-    const distance = endTime - now;
-    let progress = ((totalDistance - distance) / totalDistance) * 100;
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    let countdownText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-
-    if (distance <= 0) {
-        // Countdown over.
-        clearInterval(heartbeat);
-        countdownText = '<div class="alert alert-success" role="alert">yaaay :D!</div>';
-        progress = 100
-    }
-    document.getElementById('progress').style.width = `${progress}%`;
-    document.getElementById('countdown').innerHTML = countdownText;
-}
-
-function generateCloudHTML() {
-    let cloudHTML = '<div id="clouds">';
-    for (let i = 1; i < 6; i++) {
-        cloudHTML += `<div class="cloud x${i}"></div>`
-    }
-    cloudHTML += '</div>';
-    return cloudHTML;
 }
 
 // noinspection JSUnusedGlobalSymbols
