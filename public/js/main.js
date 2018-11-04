@@ -1,37 +1,44 @@
 /* Object definitions */
 class SunTimeAPI {
-    constructor() {
+    constructor(location) {
         this.endoint = 'https://api.sunrise-sunset.org/json';
         this.fetching = false;
+        this.location = location
     }
 
-    updateSunTimes(location, relativeFetchDate) {
-        let promise = this.startFetch(location, relativeFetchDate);
-        this.processFetchResult(promise, location)
+    updateSunTimes(relativeFetchDate) {
+        let promise = this.startFetch(relativeFetchDate);
+        this.processPromise(promise)
     }
 
-    processFetchResult(promise, location) {
-        let that = this;
-        promise.then((response) => {
-            if (response.status !== 200) {
-                console.log('Looks like there was a problem. Status Code: ' + response.status);
-                throw response.status;
-            }
-            response.json().then(location.receiveSunTimes.bind(location))
-        })
-        .catch((err) => { console.log('Fetch Error :-S', err); })
-        .finally(() => { that.fetching = false });
-    }
-
-    startFetch(location, relativeFetchDate) {
+    startFetch(relativeFetchDate) {
         console.log(`fetching: ${this.endoint}
-        ?lat=${location.latitude}
-        &lng=${location.longitude}
+        ?lat=${this.location.latitude}
+        &lng=${this.location.longitude}
         &formatted=0
         &date=${relativeFetchDate}`
         );
         this.fetching = true;
-        return fetch(`${this.endoint}?lat=${location.latitude}&lng=${location.longitude}&formatted=0&date=${relativeFetchDate}`)
+        return fetch(`${this.endoint}?lat=${this.location.latitude}&lng=${this.location.longitude}&formatted=0&date=${relativeFetchDate}`)
+    }
+
+    processPromise(promise) {
+        let that = this;
+        promise.then(that.processResponse.bind(that))
+        .catch((err) => { console.log('Fetch Error :-S', err); })
+        .finally(() => { that.fetching = false });
+    }
+
+    processResponse(response) {
+        SunTimeAPI.requireOkFrom(response);
+        response.json().then(this.location.receiveSunTimes.bind(this.location))
+    }
+
+    static requireOkFrom(response) {
+        if (response.status !== 200) {
+            console.log('Looks like there was a problem. Status Code: ' + response.status);
+            throw response.status;
+        }
     }
 }
 
@@ -48,7 +55,7 @@ class Location {
         this.longitude = longitude;
         this.timeZoneOffset = timeZoneOffset;
         this.dayLength = 0;
-        this.suntimeAPI = new SunTimeAPI();
+        this.suntimeAPI = new SunTimeAPI(this);
     }
 
     get dayTimeProgression() {
@@ -82,7 +89,7 @@ class Location {
 
     updateSunTimes() {
         const relativeFetchDate = this.decideOnFetchDate();
-        this.suntimeAPI.updateSunTimes(this, relativeFetchDate)
+        this.suntimeAPI.updateSunTimes(relativeFetchDate)
     }
 
     decideOnFetchDate() {
@@ -297,7 +304,7 @@ class Countdown {
 
 /* Globals */
 const startDate = new Date(Date.UTC(2017, 13, 12, 12, 0));
-const endDate = new Date(Date.UTC(2018, 13, 12, 12, 0));
+const endDate = new Date(Date.UTC(2018, 11, 24, 0, 0));
 let countdown = new Countdown(startDate, endDate);
 const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
