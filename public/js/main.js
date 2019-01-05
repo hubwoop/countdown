@@ -234,8 +234,8 @@ class Half {
 }
 
 /* Globals */
-const startTime = new Date(Date.UTC(2017, 13, 12, 12, 0)).getTime();
-const endTime = new Date(Date.UTC(2018, 13, 12, 12, 0)).getTime();
+const startTime = new Date(Date.UTC(2018, 13, 12, 12, 0)).getTime();
+const endTime = new Date(Date.UTC(2019, 13, 12, 12, 0)).getTime();
 const totalDistance = endTime - startTime;
 const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
