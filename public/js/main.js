@@ -1,8 +1,50 @@
 /* Object definitions */
+class SunTimeAPI {
+    constructor(location) {
+        this.endoint = 'https://api.sunrise-sunset.org/json';
+        this.fetching = false;
+        this.location = location
+    }
+
+    updateSunTimes(relativeFetchDate) {
+        let promise = this.startFetch(relativeFetchDate);
+        this.processPromise(promise)
+    }
+
+    startFetch(relativeFetchDate) {
+        console.log(`fetching: ${this.endoint}
+        ?lat=${this.location.latitude}
+        &lng=${this.location.longitude}
+        &formatted=0
+        &date=${relativeFetchDate}`
+        );
+        this.fetching = true;
+        return fetch(`${this.endoint}?lat=${this.location.latitude}&lng=${this.location.longitude}&formatted=0&date=${relativeFetchDate}`)
+    }
+
+    processPromise(promise) {
+        let that = this;
+        promise.then(that.processResponse.bind(that))
+        .catch((err) => { console.log('Fetch Error :-S', err); })
+        .finally(() => { that.fetching = false });
+    }
+
+    processResponse(response) {
+        SunTimeAPI.requireOkFrom(response);
+        response.json().then(this.location.receiveSunTimes.bind(this.location))
+    }
+
+    static requireOkFrom(response) {
+        if (response.status !== 200) {
+            console.log('Looks like there was a problem. Status Code: ' + response.status);
+            throw response.status;
+        }
+    }
+}
 
 class Location {
 
-    constructor(city, latitude, longitude, timeZoneOffset, whereOnEarthID) {
+    constructor(city, latitude, longitude, timeZoneOffset) {
         this.currentTime = null;
         this.sunset = 0;
         this.sunrise = 0;
@@ -13,44 +55,41 @@ class Location {
         this.longitude = longitude;
         this.timeZoneOffset = timeZoneOffset;
         this.dayLength = 0;
-        this.whereOnEarthID = whereOnEarthID;
-        this.termperature = null;
-        this.weather = null;
-        this.fetchDate = null;
-        this.suntimeAPI = 'https://api.sunrise-sunset.org/json';
+        this.suntimeAPI = new SunTimeAPI(this);
     }
 
     get dayTimeProgression() {
         return (((new Date() - this.sunrise) / 1000) / (this.dayLength)) * 100;
     }
 
+    set time(date) {
+        let minute = Location.forceTwoDigits(date.getMinutes());
+        let second = Location.forceTwoDigits(date.getSeconds());
+
+        if(!this.currentTime || (this.inFirstSecondsOfNewDay() && !this.suntimeAPI.fetching)) {
+            this.updateSunTimes();
+        }
+
+        this.currentTime = {
+            hour: (date.getUTCHours() + this.timeZoneOffset) % 24,
+            minute: minute,
+            second: second
+        };
+    }
+
+    inFirstSecondsOfNewDay() {
+        return this.currentTime.hour === 0
+            && this.currentTime.minute === 0
+            && this.currentTime.second < 5;
+    }
+
+    static forceTwoDigits(i) {
+        return (i < 10) ? '0' + i : i;
+    }
+
     updateSunTimes() {
         const relativeFetchDate = this.decideOnFetchDate();
-        let that = this;
-        console.log(`fetching: ${this.suntimeAPI}
-        ?lat=${this.latitude}
-        &lng=${this.longitude}
-        &formatted=0
-        &date=${relativeFetchDate}`
-        );
-        fetch(`${this.suntimeAPI}?lat=${this.latitude}&lng=${this.longitude}&formatted=0&date=${relativeFetchDate}`)
-            .then(function (response) {
-                if (response.status !== 200) {
-                    console.log('Looks like there was a problem. Status Code: ' + response.status);
-                    return;
-                }
-                response.json().then(function (data) {
-                    that.sunrise = new Date(data.results.sunrise);
-                    that.sunset = new Date(data.results.sunset);
-                    that.twilightBegin = new Date(data.results.civil_twilight_begin);
-                    that.twilightEnd = new Date(data.results.civil_twilight_end);
-                    that.dayLength = data.results.day_length;
-                    that.fetchDate = new Date();
-                });
-            })
-            .catch(function (err) {
-                console.log('Fetch Error :-S', err);
-            })
+        this.suntimeAPI.updateSunTimes(relativeFetchDate)
     }
 
     decideOnFetchDate() {
@@ -62,6 +101,15 @@ class Location {
         } else {
             return 'today';
         }
+    }
+
+    receiveSunTimes(data) {
+        const sunTimes = data.results;
+        this.sunrise = new Date(sunTimes['sunrise']);
+        this.sunset = new Date(sunTimes['sunset']);
+        this.twilightBegin = new Date(sunTimes['civil_twilight_begin']);
+        this.twilightEnd = new Date(sunTimes['civil_twilight_end']);
+        this.dayLength = sunTimes['day_length'];
     }
 }
 
@@ -107,25 +155,10 @@ class Halves {
     }
 
     updateLocalTimes(date) {
-        let minute = Halves.forceTwoDigits(date.getMinutes());
-        let second = Halves.forceTwoDigits(date.getSeconds());
         for (const half of this) {
-            half.location.currentTime = {
-                hour: (date.getUTCHours() + half.location.timeZoneOffset) % 24,
-                minute: minute,
-                second: second
-            };
-            if(half.location.currentTime.hour === 0
-                && half.location.currentTime.minute === 0
-                && half.location.currentTime.second < 5 ) {
-                half.location.updateSunTimes();
-            }
-
+            half.location.time = date;
+            half.updateTimeDisplay()
         }
-    }
-
-    static forceTwoDigits(i) {
-        return (i < 10) ? '0' + i : i;
     }
 }
 
@@ -136,7 +169,6 @@ class Half {
         this.id = id;
         this.element = document.getElementById(id);
         this.gradient = null;
-        this.updateTimes = false;
         document.getElementById(`${this.id}Location`).textContent = location.city;
     }
 
@@ -233,10 +265,47 @@ class Half {
     }
 }
 
+class Countdown {
+    constructor(startDate, endDate) {
+        this.startTimeStamp = startDate.getTime();
+        this.endTimeStamp = endDate.getTime();
+        this.totalDistance = this.endTimeStamp - this.startTimeStamp;
+        this.progresBar = document.getElementById('progress');
+        this.countdownDisplay = document.getElementById('countdown');
+    }
+
+    update(date) {
+        const now = date.getTime();
+        const distance = this.endTimeStamp - now;
+        let countdownText;
+        let progress = 0;
+        if (distance <= 0) {
+            // Countdown over.
+            clearInterval(heartbeat);
+            countdownText = '<div class="alert alert-success" role="alert">yaaay :D!</div>';
+            progress = 100
+        } else {
+            progress = ((this.totalDistance - distance) / this.totalDistance) * 100;
+            const {days, hours, minutes, seconds} = Countdown.calculateTimeParts(distance);
+            countdownText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        }
+        this.progresBar.style.width = `${progress}%`;
+        this.countdownDisplay.innerHTML = countdownText;
+    }
+
+    static calculateTimeParts(distance) {
+        const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        return {days, hours, minutes, seconds};
+    }
+}
+
 /* Globals */
-const startTime = new Date(Date.UTC(2018, 13, 12, 12, 0)).getTime();
-const endTime = new Date(Date.UTC(2019, 13, 12, 12, 0)).getTime();
-const totalDistance = endTime - startTime;
+const startDate = new Date(Date.UTC(2018, 13, 12, 12, 0));
+const endDate = new Date(Date.UTC(2019, 13, 12, 12, 0));
+let countdown = new Countdown(startDate, endDate);
 const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
     dusk: new Gradient('#485661', '#ff822b'),
@@ -248,8 +317,8 @@ let heartbeat;
 let halted = false;
 // for woeid goto https://developer.yahoo.com/weather/ and use the sample api:
 // select woeid from geo.places(1) where text="north pole"
-let nordpol = new Location('nordpol', 80, 10, 0, 2461487);
-let erlangen = new Location('erlangen', 49.59099, 11.00783, 1, 680564);
+let nordpol = new Location('nordpol', 80, 10, 0);
+let erlangen = new Location('erlangen', 49.59099, 11.00783, 1);
 let halves = new Halves(
     new Half(erlangen, 'upperHalf'),
     new Half(nordpol, 'lowerHalf')
@@ -259,9 +328,6 @@ let halves = new Halves(
 
 window.onload = function () {
     console.log("Available commands:\nhalt() stops periodic updates.\nresume() enables periodic updates.");
-    for (const half of halves) {
-        half.location.updateSunTimes();
-    }
     heartbeat = startHeartbeat();
 };
 
@@ -270,7 +336,7 @@ function startHeartbeat() {
     heartbeat = setInterval(function () {
 
         let date = new Date();
-        updateCountdown(date);
+        countdown.update(date);
         halves.updateLocalTimes(date);
         halves.updateDaytimeBasedVisuals(date);
 
@@ -279,36 +345,7 @@ function startHeartbeat() {
     return heartbeat;
 }
 
-function updateCountdown(date) {
-
-    const now = date.getTime();
-    const distance = endTime - now;
-    let progress = ((totalDistance - distance) / totalDistance) * 100;
-    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    let countdownText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-
-    if (distance <= 0) {
-        // Countdown over.
-        clearInterval(heartbeat);
-        countdownText = '<div class="alert alert-success" role="alert">yaaay :D!</div>';
-        progress = 100
-    }
-    document.getElementById('progress').style.width = `${progress}%`;
-    document.getElementById('countdown').innerHTML = countdownText;
-}
-
-function generateCloudHTML() {
-    let cloudHTML = '<div id="clouds">';
-    for (let i = 1; i < 6; i++) {
-        cloudHTML += `<div class="cloud x${i}"></div>`
-    }
-    cloudHTML += '</div>';
-    return cloudHTML;
-}
-
+// noinspection JSUnusedGlobalSymbols
 function halt() {
     if (!halted) {
         clearInterval(heartbeat);
@@ -318,6 +355,7 @@ function halt() {
     }
 }
 
+// noinspection JSUnusedGlobalSymbols
 function resume() {
     if (!halted) {
         console.log("Already RUNNING...")
