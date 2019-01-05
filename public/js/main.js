@@ -303,8 +303,8 @@ class Countdown {
 }
 
 /* Globals */
-const startDate = new Date(Date.UTC(2018, 13, 12, 12, 0));
-const endDate = new Date(Date.UTC(2019, 13, 12, 12, 0));
+const startDate = new Date(Date.UTC(2018, 11, 24, 12, 0));
+const endDate = new Date(Date.UTC(2019, 11, 24, 12, 0));
 let countdown = new Countdown(startDate, endDate);
 const DAYTIME_GRADIENTS = {
     dawn: new Gradient('#63adf7', '#ffb539'),
