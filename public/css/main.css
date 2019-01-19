@@ -91,6 +91,11 @@ textarea {
    Application specific styles
    ========================================================================== */
 
+@font-face {
+    font-family: Roboto;
+    src: url('../assets/font/Roboto-Regular.ttf');
+}
+
 body {
     --bottom-half-top-color: black;
     --bottom-half-bottom-color: black;
@@ -98,6 +103,10 @@ body {
     --top-half-bottom-color: black;
     --sun-size: 8vw;
     --base-cloud-speed: 25s;
+    margin: 0;
+    padding: 0;
+    color: white;
+    font-family: Roboto, sans-serif;
 }
 
 .foreground {
